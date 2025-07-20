@@ -61,16 +61,14 @@ function BattleScreen() {
     dispatch({ type: 'USE_RING_CHARGE' });
     // Automatically answer the riddle correctly
     setTimeout(() => {
-      dispatch({ type: 'ANSWER_RIDDLE', payload: { answer: battle.currentRiddle.correctAnswer } });
+      dispatch({ type: 'ANSWER_RIDDLE', payload: { answer: battle.currentRiddle.answer } });
     }, 100);
   };
 
   const getBackgroundColor = () => {
     switch (battle.battleBackground) {
-      case 'stone':
-        return '#8D8D8D';
-      case 'castle':
-        return '#5D4037';
+      case 'water':
+        return '#2196F3';
       default:
         return '#4CAF50';
     }
@@ -78,10 +76,8 @@ function BattleScreen() {
 
   const getBackgroundPattern = () => {
     switch (battle.battleBackground) {
-      case 'stone':
-        return `url(${getTileAsset('stone')})`;
-      case 'castle':
-        return `url(${getTileAsset('castle')})`;
+      case 'water':
+        return `url(${getTileAsset('water')})`;
       default:
         return `url(${getTileAsset('grass')})`;
     }

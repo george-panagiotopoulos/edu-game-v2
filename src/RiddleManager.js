@@ -179,8 +179,8 @@ const germanToGreekRiddles = [
   },
   {
     question: "Wie sagt man 'Vogel' auf Griechisch?",
-    options: ["σκύλος", "γάτα", "πούλι", "ψάρι"],
-    answer: "πούλι",
+    options: ["σκύλος", "γάτα", "ποuλί", "ψάρι"],
+    answer: "ποuλί",
     category: "German"
   },
   {
@@ -304,7 +304,7 @@ const greekToGermanRiddles = [
     category: "German"
   },
   {
-    question: "Πώς λέγεται το 'πούλι' στα γερμανικά;",
+    question: "Πώς λέγεται το 'ποuλί' στα γερμανικά;",
     options: ["Hund", "Katze", "Vogel", "Fisch"],
     answer: "Vogel",
     category: "German"

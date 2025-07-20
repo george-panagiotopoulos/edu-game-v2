@@ -710,9 +710,9 @@ function gameReducer(state, action) {
           const currentTile = currentMap.tiles[newY][newX];
           let battleBackground = 'grass';
           if (currentTile === TILE_TYPES.STONE || currentTile === TILE_TYPES.STONE2 || currentTile === TILE_TYPES.DUNGEON_FLOOR) { // Added DUNGEON_FLOOR
-            battleBackground = 'stone';
+            battleBackground = 'water';
           } else if (currentTile === TILE_TYPES.CASTLE) {
-            battleBackground = 'castle';
+            battleBackground = 'water';
           }
           
           // Check if monster is fast - if so, monster attacks first
@@ -1011,7 +1011,7 @@ function gameReducer(state, action) {
       };
       
     case 'ANSWER_RIDDLE':
-      const isCorrect = action.payload.answer === state.battle.currentRiddle.correctAnswer;
+      const isCorrect = action.payload.answer === state.battle.currentRiddle.answer;
       
       if (isCorrect) {
         let strongDamage = Math.floor(Math.random() * 11) + 25; // 25-35 damage
