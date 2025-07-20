@@ -426,7 +426,10 @@ function generateDungeonMonsters() {
     { id: 209, x: 6, y: 6, hp: 30, maxHp: 30, type: 'spider', isDefeated: false, proximity: 1, attackDamage: 6, fast: false },
     { id: 210, x: 6, y: 13, hp: 30, maxHp: 30, type: 'spider', isDefeated: false, proximity: 1, attackDamage: 6, fast: false }, // Moved near armor
     { id: 211, x: 7, y: 7, hp: 30, maxHp: 30, type: 'snake', isDefeated: false, proximity: 1, attackDamage: 9, fast: true },
-    { id: 212, x: 1, y: 12, hp: 30, maxHp: 30, type: 'snake', isDefeated: false, proximity: 1, attackDamage: 9, fast: true } // Moved near armor
+    { id: 212, x: 1, y: 12, hp: 30, maxHp: 30, type: 'snake', isDefeated: false, proximity: 1, attackDamage: 9, fast: true }, // Moved near armor
+    // Shadow monsters - strong enemies (25-35 damage range, using 30 as average)
+    { id: 213, x: 2, y: 1, hp: 45, maxHp: 45, type: 'shadow', isDefeated: false, proximity: 2, attackDamage: 30, fast: false }, // Shadow at 2:1
+    { id: 214, x: 12, y: 8, hp: 45, maxHp: 45, type: 'shadow', isDefeated: false, proximity: 2, attackDamage: 30, fast: false } // Random shadow in dungeon
   ];
 }
 
@@ -537,17 +540,30 @@ function generateDungeonArmor() {
 }
 
 function generateDungeonRing() {
-  return [{
-    id: 201,
-    x: 18,
-    y: 13,
-    type: 'equipment',
-    equipmentType: 'ring',
-    name: 'Ring of Knowledge',
-    charges: 3,
-    guardedBy: 205, // Guarded by the skeleton mage at (18, 12)
-    isCollected: false
-  }];
+  return [
+    {
+      id: 201,
+      x: 18,
+      y: 13,
+      type: 'equipment',
+      equipmentType: 'ring',
+      name: 'Ring of Knowledge',
+      charges: 3,
+      guardedBy: 205, // Guarded by the skeleton mage at (18, 12)
+      isCollected: false
+    },
+    {
+      id: 202,
+      x: 1,
+      y: 1,
+      type: 'equipment',
+      equipmentType: 'ring',
+      name: 'Ring of Knowledge',
+      charges: 3,
+      guardedBy: 213, // Guarded by the shadow at (2, 1)
+      isCollected: false
+    }
+  ];
 }
 
 // Initial game state
@@ -564,7 +580,8 @@ const initialState = {
       shield: null,
       armor: null,
       ring: null
-    }
+    },
+    ringCharges: 0 // Simple counter for ring charges
   },
   currentMapId: 'main', // New: Track current map
   maps: { // New: Store multiple maps
@@ -810,21 +827,42 @@ function gameReducer(state, action) {
           // Collect and equip the equipment
           const equipmentConfig = EQUIPMENT_ITEMS[equipmentAtPosition.equipmentType];
           
-          updatedHero = {
-            ...updatedHero,
-            equipment: {
-              ...updatedHero.equipment,
-              [equipmentConfig.type === 'shield' ? 'shield' : equipmentConfig.type]: equipmentAtPosition.equipmentType
+          // RING: Special handling for rings
+          if (equipmentConfig.type === 'ring') {
+            if (!updatedHero.equipment.ring) {
+              // Give ring with 3 charges
+              updatedHero = {
+                ...updatedHero,
+                equipment: { ...updatedHero.equipment, ring: 'ring' },
+                ringCharges: 3
+              };
+              
+              updatedItems = currentMap.items.map(item =>
+                item.id === equipmentAtPosition.id
+                  ? { ...item, isCollected: true }
+                  : item
+              );
+              
+              healMessage = `You equipped the Ring of Knowledge! (3 charges)`;
             }
-          };
-          
-          updatedItems = currentMap.items.map(item =>
-            item.id === equipmentAtPosition.id
-              ? { ...item, isCollected: true }
-              : item
-          );
-          
-          healMessage = `You equipped the ${equipmentConfig.name}! (Εξοπλιστήκατε με το ${equipmentConfig.name}!)`;
+          } else {
+            // Non-ring equipment
+            updatedHero = {
+              ...updatedHero,
+              equipment: {
+                ...updatedHero.equipment,
+                [equipmentConfig.type === 'shield' ? 'shield' : equipmentConfig.type]: equipmentAtPosition.equipmentType
+              }
+            };
+            
+            updatedItems = currentMap.items.map(item =>
+              item.id === equipmentAtPosition.id
+                ? { ...item, isCollected: true }
+                : item
+            );
+            
+            healMessage = `You equipped the ${equipmentConfig.name}! (Εξοπλιστήκατε με το ${equipmentConfig.name}!)`;
+          }
         }
         
         return {
@@ -1282,69 +1320,43 @@ function gameReducer(state, action) {
         item.id === action.payload.equipmentId
       );
       
-      if (equipmentToCollect && !equipmentToCollect.isCollected) {
-        const guardianDefeated = currentMap.monsters.find(monster => 
-          monster.id === equipmentToCollect.guardedBy
-        )?.isDefeated;
+      if (!equipmentToCollect || equipmentToCollect.isCollected) return state;
+      
+      const equipmentConfig = EQUIPMENT_ITEMS[equipmentToCollect.equipmentType];
+      
+      // RING: Simple logic - if no ring equipped, give ring with 3 charges
+      if (equipmentConfig.type === 'ring') {
+        if (state.hero.equipment.ring) return state; // Already has ring
         
-        console.log('Equipment to collect:', equipmentToCollect);
-        console.log('Guardian defeated:', guardianDefeated);
-        
-        if (guardianDefeated) {
-          const equipmentConfig = EQUIPMENT_ITEMS[equipmentToCollect.equipmentType];
-          console.log('Equipment config:', equipmentConfig);
-          console.log('Equipment type:', equipmentConfig.type);
-          console.log('Equipment slot:', equipmentConfig.type === 'shield' ? 'shield' : equipmentConfig.type);
-          
-          const updatedEquipment = {
-            ...state.hero.equipment,
-            [equipmentConfig.type === 'shield' ? 'shield' : equipmentConfig.type]: 
-              equipmentConfig.type === 'ring' ? equipmentToCollect : equipmentToCollect.equipmentType
-          };
-          
-          console.log('Updated hero equipment:', updatedEquipment);
-          console.log('Hero equipment after update:', {
+        return {
+          ...state,
+          hero: {
             ...state.hero,
-            equipment: updatedEquipment
-          }.equipment);
-          console.log('EQUIPMENT_ITEMS[shield]:', EQUIPMENT_ITEMS['shield']);
-          console.log('EQUIPMENT_ITEMS[updatedEquipment.shield]:', EQUIPMENT_ITEMS[updatedEquipment.shield]);
-          
-          return {
-            ...state,
-            hero: {
-              ...state.hero,
-              equipment: updatedEquipment
-            },
-            maps: {
-              ...state.maps,
-              [state.currentMapId]: {
-                ...currentMap,
-                items: currentMap.items.map(item =>
-                  item.id === equipmentToCollect.id
-                    ? { ...item, isCollected: true }
-                    : item
-                )
-              }
-            },
-            battle: {
-              ...state.battle,
-              battleMessage: `You equipped the ${equipmentConfig.name}! (Εξοπλιστήκατε με το ${equipmentConfig.name}!)`
+            equipment: { ...state.hero.equipment, ring: 'ring' },
+            ringCharges: 3
+          },
+          maps: {
+            ...state.maps,
+            [state.currentMapId]: {
+              ...currentMap,
+              items: currentMap.items.map(item =>
+                item.id === equipmentToCollect.id ? { ...item, isCollected: true } : item
+              )
             }
-          };
-        }
-      }
-      return state;
-      
-    case 'USE_RING_CHARGE':
-      if (!state.hero.equipment.ring || state.hero.equipment.ring.charges <= 0) {
-        return state;
+          },
+          battle: {
+            ...state.battle,
+            battleMessage: `You equipped the Ring of Knowledge! (3 charges)`
+          }
+        };
       }
       
-      const updatedRing = {
-        ...state.hero.equipment.ring,
-        charges: state.hero.equipment.ring.charges - 1
-      };
+      // OTHER EQUIPMENT: Check guardian
+      const guardianDefeated = currentMap.monsters.find(monster => 
+        monster.id === equipmentToCollect.guardedBy
+      )?.isDefeated;
+      
+      if (!guardianDefeated) return state;
       
       return {
         ...state,
@@ -1352,12 +1364,56 @@ function gameReducer(state, action) {
           ...state.hero,
           equipment: {
             ...state.hero.equipment,
-            ring: updatedRing.charges > 0 ? updatedRing : null
+            [equipmentConfig.type === 'shield' ? 'shield' : equipmentConfig.type]: equipmentToCollect.equipmentType
+          }
+        },
+        maps: {
+          ...state.maps,
+          [state.currentMapId]: {
+            ...currentMap,
+            items: currentMap.items.map(item =>
+              item.id === equipmentToCollect.id ? { ...item, isCollected: true } : item
+            )
           }
         },
         battle: {
           ...state.battle,
-          battleMessage: `Ring charge used! ${updatedRing.charges} charges remaining. (Χρησιμοποιήθηκε φόρτιση δαχτυλιδιού! ${updatedRing.charges} χρήσεις ακόμα.)`
+          battleMessage: `You equipped the ${equipmentConfig.name}!`
+        }
+      };
+      
+    case 'USE_RING_CHARGE':
+      if (!state.hero.equipment.ring || state.hero.ringCharges <= 0) {
+        return state;
+      }
+      
+      const remainingCharges = state.hero.ringCharges - 1;
+      
+      // If charges reach 0, unequip the ring
+      if (remainingCharges <= 0) {
+        return {
+          ...state,
+          hero: {
+            ...state.hero,
+            equipment: { ...state.hero.equipment, ring: null },
+            ringCharges: 0
+          },
+          battle: {
+            ...state.battle,
+            battleMessage: `Ring charges depleted! Ring unequipped. (Εξαντλήθηκαν οι χρήσεις του δαχτυλιδιού! Το δαχτυλίδι αφαιρέθηκε.)`
+          }
+        };
+      }
+      
+      return {
+        ...state,
+        hero: {
+          ...state.hero,
+          ringCharges: remainingCharges
+        },
+        battle: {
+          ...state.battle,
+          battleMessage: `Ring charge used! ${remainingCharges} charges remaining. (Χρησιμοποιήθηκε φόρτιση δαχτυλιδιού! ${remainingCharges} χρήσεις ακόμα.)`
         }
       };
       

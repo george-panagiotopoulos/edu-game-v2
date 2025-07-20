@@ -166,16 +166,16 @@ function Hero({ x, y }) {
           {/* Full resolution ring tooltip */}
           <div className="equipment-tooltip ring-tooltip">
             <img 
-              src={getEquipmentAsset(hero.equipment.ring)} 
+              src={getEquipmentAsset('ring')} 
               alt="Ring" 
               className="tooltip-image"
             />
             <div className="tooltip-text">
               <strong>Ring of Knowledge</strong><br/>
-              {hero.equipment.ring.charges} charges remaining<br/>
+              {hero.ringCharges || 0} charges remaining<br/>
               Skip riddles with charges<br/>
               (Δαχτυλίδι Γνώσης)<br/>
-              {hero.equipment.ring.charges} χρήσεις ακόμα
+              {hero.ringCharges || 0} χρήσεις ακόμα
             </div>
           </div>
         </div>

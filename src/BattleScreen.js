@@ -194,14 +194,14 @@ function BattleScreen() {
                 </button>
               ))}
             </div>
-            {hero.equipment.ring && hero.equipment.ring.charges > 0 && (
+            {hero.equipment.ring && hero.ringCharges > 0 && (
               <div className="ring-usage">
                 <button 
                   className="battle-btn ring-btn" 
                   onClick={handleUseRing}
-                  title={`Use Ring of Knowledge (${hero.equipment.ring.charges} charges left)`}
+                  title={`Use Ring of Knowledge (${hero.ringCharges || 0} charges left)`}
                 >
-                  💍 Use Ring ({hero.equipment.ring.charges} charges)
+                                      💍 Use Ring ({hero.ringCharges || 0} charges)
                   <small>Skip this riddle (Παραλείψτε αυτόν τον γρίφο)</small>
                 </button>
               </div>

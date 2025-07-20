@@ -50,7 +50,8 @@ export const MONSTER_ASSETS = {
   troll: 'troll.png',
   ghost: 'spirit.png',
   banshee: 'banshee.png',
-  crab: 'crab.png'
+  crab: 'crab.png',
+  shadow: 'shadow.png'
 };
 
 // Hero asset (armored knight from monster set)

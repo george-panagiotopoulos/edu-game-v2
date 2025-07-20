@@ -87,12 +87,12 @@ function HUD() {
             }
           </div>
           <div className="equipment-slot ring-slot" title={hero.equipment.ring ? 
-            `${hero.equipment.ring.name} (${hero.equipment.ring.charges} charges remaining)` :
+            `Ring of Knowledge (${hero.ringCharges || 0} charges remaining)` :
             'No ring equipped'
           }>
             <strong>Ring: (Δαχτυλίδι:)</strong><br/>
             {hero.equipment.ring ? 
-              `${hero.equipment.ring.name} (${hero.equipment.ring.charges} charges)` :
+              `Ring of Knowledge (${hero.ringCharges || 0} charges)` :
               'None (Κανένο)'
             }
           </div>
@@ -114,15 +114,7 @@ function HUD() {
           </div>
         )}
         
-        {/* Debug section - remove this after testing */}
-        <div className="debug-section" style={{marginTop: '10px', padding: '5px', backgroundColor: '#333', fontSize: '10px'}}>
-          <strong>Debug Info:</strong><br/>
-          Weapon: {hero.equipment.weapon || 'null'}<br/>
-          Shield: {hero.equipment.shield || 'null'}<br/>
-          Armor: {hero.equipment.armor ? hero.equipment.armor.name : 'null'}<br/>
-          Ring: {hero.equipment.ring ? `${hero.equipment.ring.name} (${hero.equipment.ring.charges} charges)` : 'null'}<br/>
-          Current Map: {currentMapId}
-        </div>
+
       </div>
 
       <div className="hud-section">
