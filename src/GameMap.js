@@ -1,30 +1,34 @@
 import React from 'react';
-import { useGame, TILE_SIZE } from './GameState';
-import { getTileAsset } from './AssetManager';
+import { useGame, TILE_SIZE, TILE_TYPES } from './GameState'; // Import TILE_TYPES
+import { getTileAsset, getItemAsset, getEquipmentAsset } from './AssetManager';
 import Hero from './Hero';
 import Monster from './Monster';
 
 function GameMap() {
-  const { state } = useGame();
-  const { map, hero, monsters } = state;
+  const { state, dispatch } = useGame();
+  const { hero, currentMapId, maps } = state; // Get currentMapId and maps from state
+  const currentMap = maps[currentMapId]; // Get the current map data
+  const monsters = currentMap.monsters; // Get monsters specific to the current map
+  const items = currentMap.items; // Get items specific to the current map
 
   return (
     <div className="game-map">
       <div 
         className="map-container"
         style={{
-          width: map.width * TILE_SIZE,
-          height: map.height * TILE_SIZE,
+          width: currentMap.width * TILE_SIZE,
+          height: currentMap.height * TILE_SIZE,
           position: 'relative',
           border: '2px solid #333'
         }}
       >
         {/* Render tiles */}
-        {map.tiles.map((row, y) =>
+        {currentMap.tiles.map((row, y) => // Use currentMap.tiles
           row.map((tile, x) => (
             <div
               key={`${x}-${y}`}
               className="tile"
+              data-tile-type={tile}
               style={{
                 position: 'absolute',
                 left: x * TILE_SIZE,
@@ -37,6 +41,9 @@ function GameMap() {
                 backgroundPosition: 'center',
                 backgroundRepeat: 'no-repeat'
               }}
+              title={tile === TILE_TYPES.DUNGEON_ENTRANCE ? 
+                (currentMapId === 'main' ? 'Enter Dungeon (Μπείτε στο Μπουντρούμι)' : 'Exit Dungeon (Έξοδος από το Μπουντρούμι)') : 
+                ''}
             />
           ))
         )}
@@ -50,6 +57,121 @@ function GameMap() {
           .map(monster => (
             <Monster key={monster.id} monster={monster} />
           ))
+        }
+        
+        {/* Render potions */}
+        {items
+          .filter(item => item.type === 'potion' && !item.isCollected)
+          .map(potion => (
+            <div
+              key={`potion-${potion.id}`}
+              className="potion"
+              style={{
+                position: 'absolute',
+                left: potion.x * TILE_SIZE + TILE_SIZE * 0.2,
+                top: potion.y * TILE_SIZE + TILE_SIZE * 0.2,
+                width: TILE_SIZE * 0.6,
+                height: TILE_SIZE * 0.6,
+                backgroundImage: `url(${getItemAsset('potion')})`,
+                backgroundSize: 'contain',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+                border: '3px solid rgba(0, 123, 255, 0.8)',
+                borderRadius: '8px',
+                zIndex: 5,
+                filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.5))'
+              }}
+              title={`Healing Potion (+${potion.healAmount} HP)`}
+            />
+          ))
+        }
+        
+        {/* Render armor items */}
+        {(() => {
+          console.log('Current map ID:', currentMapId);
+          console.log('All items in current map:', items);
+          const armorItems = items.filter(item => 
+            item.type === 'armor' && 
+            !item.isCollected
+          );
+          console.log('Armor items to render:', armorItems);
+          return armorItems.map(armor => (
+            <div
+              key={`armor-${armor.id}`}
+              className="armor"
+              style={{
+                position: 'absolute',
+                left: armor.x * TILE_SIZE + TILE_SIZE * 0.25,
+                top: armor.y * TILE_SIZE + TILE_SIZE * 0.25,
+                width: TILE_SIZE * 0.5,
+                height: TILE_SIZE * 0.5,
+                backgroundImage: `url(${getItemAsset('armor')})`,
+                backgroundSize: 'contain',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+                border: '3px solid #FFD700',
+                borderRadius: '8px',
+                zIndex: 5,
+                filter: 'drop-shadow(2px 2px 4px rgba(0,0,0,0.5))',
+                animation: 'equipment-glow 2s infinite ease-in-out',
+                cursor: 'pointer'
+              }}
+              title={`${armor.name} (-${armor.defense} damage reduction) - Click to collect!`}
+              onClick={() => {
+                console.log('Armor clicked:', armor);
+                console.log('Current map items:', items);
+                console.log('Current map ID:', currentMapId);
+                dispatch({ type: 'COLLECT_ARMOR', payload: { armorId: armor.id } });
+              }}
+            />
+          ));
+        })()}
+        
+        {/* Render equipment items (always visible as bait, but only collectible when guardian is defeated) */}
+        {items
+          .filter(item => 
+            item.type === 'equipment' && 
+            !item.isCollected
+          )
+          .map(equipment => {
+            const guardianDefeated = (currentMapId === 'main' ? state.maps.main.monsters : state.maps.dungeon.monsters).find(monster => monster.id === equipment.guardedBy)?.isDefeated; // Use current map monsters
+            return (
+              <div
+                key={`equipment-${equipment.id}`}
+                className={`equipment ${guardianDefeated ? 'collectible' : 'locked'}`}
+                style={{
+                  position: 'absolute',
+                  left: equipment.x * TILE_SIZE + TILE_SIZE * 0.25,
+                  top: equipment.y * TILE_SIZE + TILE_SIZE * 0.25,
+                  width: TILE_SIZE * 0.5,
+                  height: TILE_SIZE * 0.5,
+                  backgroundImage: `url(${getEquipmentAsset(equipment.equipmentType)})`,
+                  backgroundSize: 'contain',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
+                  border: guardianDefeated ? '3px solid #00FF00' : '3px solid #FF4444',
+                  borderRadius: '8px',
+                  zIndex: 5,
+                  filter: guardianDefeated ? 
+                    'drop-shadow(2px 2px 4px rgba(0,0,0,0.5))' : 
+                    'drop-shadow(2px 2px 4px rgba(0,0,0,0.5)) brightness(0.7)',
+                  animation: guardianDefeated ? 
+                    'equipment-glow 2s infinite ease-in-out' : 
+                    'equipment-locked-pulse 3s infinite ease-in-out',
+                  opacity: guardianDefeated ? 1 : 0.8
+                }}
+                title={guardianDefeated ? 
+                  `${equipment.equipmentType.charAt(0).toUpperCase() + equipment.equipmentType.slice(1)} - Click to collect!` :
+                  `${equipment.equipmentType.charAt(0).toUpperCase() + equipment.equipmentType.slice(1)} - Defeat the guardian monster first!`
+                }
+                onClick={() => {
+                  if (guardianDefeated) {
+                    dispatch({ type: 'COLLECT_EQUIPMENT', payload: { equipmentId: equipment.id } });
+                  }
+                }}
+              />
+            );
+          })
         }
       </div>
     </div>

@@ -114,6 +114,24 @@ body {
   text-shadow: 1px 1px 2px rgba(0,0,0,0.7);
 }
 
+.permanent-bonus {
+  color: #FFD700;
+  font-size: 12px;
+  font-weight: bold;
+  margin-top: 2px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow {
+  from {
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8), 0 0 5px #FFD700;
+  }
+  to {
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8), 0 0 10px #FFD700, 0 0 15px #FFD700;
+  }
+}
+
 .position {
   font-size: 14px;
   color: #ccc;
@@ -204,4 +222,813 @@ body {
 .game-container:focus {
   outline: 2px solid #FFD700;
   outline-offset: 2px;
+}
+
+/* Battle Screen Styles */
+.battle-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.battle-screen {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  border: 3px solid #2E7D32;
+  border-radius: 15px;
+  padding: 20px;
+  max-width: 800px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  background-size: 50px 50px;
+  background-repeat: repeat;
+}
+
+.battle-header {
+  text-align: center;
+  margin-bottom: 20px;
+  color: white;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+}
+
+.battle-header h2 {
+  margin: 0;
+  font-size: 2.5em;
+  color: #FFD700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.battle-queue {
+  margin: 5px 0 0 0;
+  font-size: 1.1em;
+  color: #FFA500;
+  font-weight: bold;
+}
+
+.battle-arena {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 20px 0;
+  gap: 20px;
+}
+
+.battle-hero, .battle-monster {
+  flex: 1;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.battle-hero.attacking {
+  animation: heroAttack 0.6s ease-in-out;
+}
+
+.battle-hero.being-attacked {
+  animation: heroHit 0.6s ease-in-out;
+}
+
+.battle-monster.attacking {
+  animation: monsterAttack 0.6s ease-in-out;
+}
+
+.battle-monster.being-attacked {
+  animation: monsterHit 0.6s ease-in-out;
+}
+
+@keyframes heroAttack {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(20px); }
+  50% { transform: translateX(20px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes heroHit {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-10px); }
+  50% { transform: translateX(-10px); }
+  75% { transform: translateX(5px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes monsterAttack {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-20px); }
+  50% { transform: translateX(-20px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes monsterHit {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(10px); }
+  50% { transform: translateX(10px); }
+  75% { transform: translateX(-5px); }
+  100% { transform: translateX(0); }
+}
+
+.character-sprite {
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.hero-battle-sprite, .monster-battle-sprite {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.attack-effect {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2em;
+  animation: attackEffect 1s ease-out;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.hero-attack-effect {
+  color: #FFD700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.monster-attack-effect {
+  color: #FF4444;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+@keyframes attackEffect {
+  0% { 
+    opacity: 0; 
+    transform: translate(-50%, -50%) scale(0.5);
+  }
+  50% { 
+    opacity: 1; 
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  100% { 
+    opacity: 0; 
+    transform: translate(-50%, -50%) scale(1.5);
+  }
+}
+
+.character-info {
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.character-name {
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #FFD700;
+}
+
+.health-bar {
+  background: rgba(0, 0, 0, 0.5);
+  border: 2px solid #333;
+  border-radius: 10px;
+  height: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.health-fill {
+  height: 100%;
+  transition: width 0.5s ease;
+  border-radius: 8px;
+}
+
+.health-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-weight: bold;
+  font-size: 0.9em;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.battle-vs {
+  font-size: 2em;
+  font-weight: bold;
+  color: #FFD700;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+  margin: 0 20px;
+}
+
+.battle-message {
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 15px;
+  border-radius: 10px;
+  margin: 20px 0;
+  text-align: center;
+  font-size: 1.1em;
+  border: 2px solid #FFD700;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.riddle-section {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid #FFD700;
+  border-radius: 10px;
+  padding: 20px;
+  margin: 20px 0;
+  color: white;
+}
+
+.riddle-section h3 {
+  margin: 0 0 15px 0;
+  color: #FFD700;
+  text-align: center;
+}
+
+.riddle-question {
+  font-size: 1.2em;
+  margin-bottom: 20px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.riddle-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.riddle-option {
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid #FFD700;
+  border-radius: 8px;
+  padding: 15px;
+  color: white;
+  font-size: 1em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.riddle-option:hover {
+  background: rgba(255, 215, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+.riddle-option.selected {
+  background: rgba(255, 215, 0, 0.5);
+  border-color: #FFA500;
+}
+
+.battle-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.battle-btn {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  border: 2px solid #2E7D32;
+  border-radius: 10px;
+  padding: 15px 25px;
+  color: white;
+  font-size: 1.1em;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 150px;
+}
+
+.battle-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.battle-btn small {
+  font-size: 0.8em;
+  opacity: 0.8;
+  margin-top: 5px;
+}
+
+.battle-btn.basic-attack {
+  background: linear-gradient(135deg, #2196F3, #1976D2);
+  border-color: #0D47A1;
+}
+
+.battle-btn.riddle-attack {
+  background: linear-gradient(135deg, #FF9800, #F57C00);
+  border-color: #E65100;
+}
+
+.battle-btn.flee {
+  background: linear-gradient(135deg, #9E9E9E, #757575);
+  border-color: #424242;
+}
+
+.battle-btn.continue {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  border-color: #2E7D32;
+}
+
+.battle-btn.defeat {
+  background: linear-gradient(135deg, #F44336, #D32F2F);
+  border-color: #B71C1C;
+}
+
+/* Potion Message Styles */
+.potion-message {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  border: 2px solid #2E7D32;
+  border-radius: 10px;
+  padding: 15px;
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+  animation: potionGlow 2s ease-in-out;
+}
+
+.potion-icon {
+  font-size: 1.5em;
+  animation: potionBounce 1s ease-in-out infinite;
+}
+
+.potion-text {
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+@keyframes potionGlow {
+  0% { box-shadow: 0 0 5px rgba(76, 175, 80, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(76, 175, 80, 0.8); }
+  100% { box-shadow: 0 0 5px rgba(76, 175, 80, 0.5); }
+}
+
+@keyframes potionBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+/* Potion on map */
+.potion {
+  transition: all 0.3s ease;
+}
+
+.potion:hover {
+  transform: scale(1.1);
+  filter: drop-shadow(2px 2px 8px rgba(76, 175, 80, 0.8)) !important;
+}
+
+/* Monster visibility enhancements */
+.monster {
+  transition: all 0.3s ease;
+}
+
+.monster:hover {
+  transform: scale(1.1);
+  border-color: rgba(255, 0, 0, 0.9) !important;
+  box-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+}
+
+@keyframes monster-pulse {
+  0% { 
+    box-shadow: 0 0 5px rgba(255, 0, 0, 0.3);
+  }
+  50% { 
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.6);
+  }
+  100% { 
+    box-shadow: 0 0 5px rgba(255, 0, 0, 0.3);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Responsive Battle Screen */
+@media (max-width: 768px) {
+  .battle-screen {
+    width: 95%;
+    height: 85%;
+  }
+  
+  .battle-arena {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .battle-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .battle-btn {
+    min-width: auto;
+    width: 100%;
+  }
+  
+  .riddle-options {
+    grid-template-columns: 1fr;
+  }
+} 
+
+/* Equipment styles and animations */
+@keyframes equipment-glow {
+  0%, 100% { 
+    box-shadow: 0 0 5px #00FF00, 0 0 10px #00FF00, 0 0 15px #00FF00;
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 10px #00FF00, 0 0 20px #00FF00, 0 0 25px #00FF00;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes equipment-locked-pulse {
+  0%, 100% { 
+    box-shadow: 0 0 5px #FF4444, 0 0 10px #FF4444, 0 0 15px #FF4444;
+    transform: scale(1);
+  }
+  50% { 
+    box-shadow: 0 0 10px #FF4444, 0 0 20px #FF4444, 0 0 25px #FF4444;
+    transform: scale(1.05);
+  }
+}
+
+.equipment {
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.equipment.collectible:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 15px #00FF00, 0 0 25px #00FF00, 0 0 35px #00FF00;
+}
+
+.equipment.locked:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 15px #FF4444, 0 0 25px #FF4444, 0 0 35px #FF4444;
+}
+
+.equipped-weapon, .equipped-armor {
+  cursor: help;
+  transition: all 0.2s ease;
+}
+
+.equipped-weapon:hover, .equipped-armor:hover {
+  transform: scale(1.2);
+  border-color: #FFF;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Equipment Tooltip Styles */
+.equipment-tooltip {
+  position: absolute;
+  visibility: hidden;
+  opacity: 0;
+  background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+  border: 2px solid #FFD700;
+  border-radius: 8px;
+  padding: 15px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.8);
+  z-index: 1000;
+  transition: all 0.3s ease;
+  min-width: 200px;
+  backdrop-filter: blur(5px);
+}
+
+.equipped-weapon:hover .equipment-tooltip,
+.equipped-armor:hover .equipment-tooltip,
+.equipped-shield:hover .equipment-tooltip,
+.equipped-ring:hover .equipment-tooltip {
+  visibility: visible;
+  opacity: 1;
+  transform: translateY(-5px);
+}
+
+.weapon-tooltip {
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.armor-tooltip {
+  bottom: 120%;
+  right: 50%;
+  transform: translateX(50%);
+}
+
+.tooltip-image {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  margin: 0 auto 10px auto;
+  display: block;
+  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5));
+}
+
+.tooltip-text {
+  color: #FFF;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.tooltip-text strong {
+  color: #FFD700;
+  font-size: 16px;
+  display: block;
+  margin-bottom: 5px;
+}
+
+/* Tooltip arrow */
+.equipment-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 8px solid transparent;
+  border-top-color: #FFD700;
+} 
+
+/* Equipment HUD styles */
+.equipment-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.equipment-slot {
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  font-size: 12px;
+  border: 2px solid transparent;
+  color: #FFF;
+}
+
+.weapon-slot {
+  grid-column: 1;
+  grid-row: 1;
+  border-color: #FFD700;
+}
+
+.shield-slot {
+  grid-column: 2;
+  grid-row: 1;
+  border-color: #C0C0C0;
+}
+
+.armor-slot {
+  grid-column: 1;
+  grid-row: 2;
+  border-color: #8B4513;
+}
+
+.ring-slot {
+  grid-column: 2;
+  grid-row: 2;
+  border-color: #FFD700;
+}
+
+.empty-slot {
+  grid-column: 2;
+  grid-row: 2;
+  border-color: #666;
+  opacity: 0.5;
+}
+
+.equipment-hint {
+  color: #FFD700;
+  font-style: italic;
+  margin-top: 5px;
+  line-height: 1.4;
+}
+
+.equipment-message {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  color: #000;
+  padding: 10px 20px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 1000;
+  animation: slideUpFade 4s ease-in-out forwards;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.equipment-icon {
+  font-size: 1.5em;
+  animation: bounce 1s infinite;
+}
+
+.equipment-text {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-5px); }
+  60% { transform: translateY(-2px); }
+}
+
+@keyframes slideUpFade {
+  0% { 
+    opacity: 0; 
+    transform: translateX(-50%) translateY(20px); 
+  }
+  10%, 90% { 
+    opacity: 1; 
+    transform: translateX(-50%) translateY(0); 
+  }
+  100% { 
+    opacity: 0; 
+    transform: translateX(-50%) translateY(-20px); 
+  }
+}
+
+/* Victory Popup Styles */
+.victory-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.victory-popup {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  border: 3px solid #FFF;
+  border-radius: 15px;
+  padding: 30px;
+  text-align: center;
+  max-width: 500px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  animation: pulse 2s infinite;
+}
+
+.victory-popup h2 {
+  color: #000;
+  font-size: 2em;
+  margin-bottom: 10px;
+  text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.5);
+}
+
+.victory-popup h3 {
+  color: #000;
+  font-size: 1.5em;
+  margin-bottom: 20px;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.victory-popup p {
+  color: #000;
+  font-size: 1.1em;
+  margin-bottom: 10px;
+  font-weight: bold;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+.victory-btn {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 8px;
+  font-size: 1.2em;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.victory-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+  background: linear-gradient(135deg, #45a049, #4CAF50);
+}
+
+/* Reset Progress Button Styles */
+.reset-section {
+  margin-top: 15px;
+  text-align: center;
+}
+
+.reset-btn {
+  background: linear-gradient(135deg, #FF6B6B, #FF5252);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.reset-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+  background: linear-gradient(135deg, #FF5252, #FF6B6B);
+} 
+
+/* Dungeon entrance styling */
+.tile[data-tile-type="dungeon_entrance"] {
+  border: 3px solid #8B4513 !important;
+  box-shadow: 0 0 10px rgba(139, 69, 19, 0.8);
+  animation: dungeon-entrance-glow 3s infinite ease-in-out;
+  cursor: pointer;
+}
+
+@keyframes dungeon-entrance-glow {
+  0%, 100% { 
+    box-shadow: 0 0 10px rgba(139, 69, 19, 0.8);
+    border-color: #8B4513;
+  }
+  50% { 
+    box-shadow: 0 0 20px rgba(139, 69, 19, 1);
+    border-color: #D2691E;
+  }
+}
+
+/* Current map indicator styling */
+.current-map {
+  font-weight: bold;
+  color: #8B4513;
+  margin-top: 5px;
+  padding: 5px;
+  background-color: rgba(139, 69, 19, 0.1);
+  border-radius: 4px;
+}
+
+/* Ring usage button styling */
+.ring-usage {
+  margin-top: 10px;
+  text-align: center;
+}
+
+.ring-btn {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  border: 2px solid #FF8C00;
+  color: #000;
+  font-weight: bold;
+}
+
+.ring-btn:hover {
+  background: linear-gradient(135deg, #FFA500, #FF8C00);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(255, 215, 0, 0.3);
 } 
