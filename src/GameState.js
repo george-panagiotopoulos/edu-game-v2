@@ -571,9 +571,9 @@ const initialState = {
   hero: {
     x: 9,
     y: 7,
-    hp: 100 + loadPermanentHpBonus(), // Start with full HP including permanent bonus
-    maxHp: 100 + loadPermanentHpBonus(), // Add permanent bonus to max HP
-    permanentHpBonus: loadPermanentHpBonus(), // Track permanent HP bonuses from completing games
+    hp: 104, // Set to 104 HP (100 base + 4 permanent bonus)
+    maxHp: 104, // Set max HP to 104
+    permanentHpBonus: 4, // Set permanent HP bonus to 4
     inventory: [],
     equipment: {
       weapon: null,
@@ -968,18 +968,24 @@ function gameReducer(state, action) {
           }
         };
       } else if (state.currentMapId === 'dungeon' && allMonstersDefeatedOnCurrentMap) {
-        // Apply +1 HP bonus when all dungeon monsters are defeated
-        const newHp = Math.min(state.hero.hp + 1, state.hero.maxHp); // Heal 1 HP
+        // Apply permanent HP bonus when all dungeon monsters are defeated
+        const newPermanentHpBonus = state.hero.permanentHpBonus + 1;
+        const newMaxHp = 100 + newPermanentHpBonus;
+        const newHp = Math.min(state.hero.hp + 1, newMaxHp); // Heal 1 HP and increase max HP
+
+        savePermanentHpBonus(newPermanentHpBonus);
 
         updatedStateAfterDefeat = {
           ...updatedStateAfterDefeat,
           hero: {
             ...updatedStateAfterDefeat.hero,
-            hp: newHp
+            hp: newHp,
+            maxHp: newMaxHp,
+            permanentHpBonus: newPermanentHpBonus
           },
           battle: {
             ...updatedStateAfterDefeat.battle,
-            battleMessage: `🎉 DUNGEON COMPLETED! You defeated all dungeon monsters! +1 HP bonus! (🎉 ΟΛΟΚΛΗΡΩΣΑΤΕ ΤΟ ΜΠΟΥΤΡΟΥΜΙ! Νικήσατε όλα τα τέρατα του μπουντρουμιού! +1 μπόνους HP!)`,
+            battleMessage: `🎉 DUNGEON COMPLETED! You defeated all dungeon monsters! +1 permanent HP bonus! (🎉 ΟΛΟΚΛΗΡΩΣΑΤΕ ΤΟ ΜΠΟΥΤΡΟΥΜΙ! Νικήσατε όλα τα τέρατα του μπουντρουμιού! +1 μόνιμο μπόνους HP!)`,
             showVictoryPopup: true
           }
         };
@@ -1442,35 +1448,7 @@ function gameReducer(state, action) {
         }
       };
       
-    case 'CHECK_GAME_COMPLETION':
-      // Check if all monsters are defeated
-      const gameCompleted = state.monsters.every(monster => monster.isDefeated);
-      
-      if (gameCompleted) {
-        // Add permanent HP bonus
-        const newPermanentHpBonus = state.hero.permanentHpBonus + 1;
-        const newMaxHp = 100 + newPermanentHpBonus;
-        const newHp = Math.min(state.hero.hp + 1, newMaxHp); // Heal 1 HP and increase max HP
-        
-        // Save the new permanent HP bonus to localStorage
-        savePermanentHpBonus(newPermanentHpBonus);
-        
-        return {
-          ...state,
-          hero: {
-            ...state.hero,
-            hp: newHp,
-            maxHp: newMaxHp,
-            permanentHpBonus: newPermanentHpBonus
-          },
-          battle: {
-            ...state.battle,
-            battleMessage: `🎉 GAME COMPLETED! You defeated all monsters! +1 permanent HP bonus! (🎉 ΟΛΟΚΛΗΡΩΣΑΤΕ ΤΟ ΠΑΙΧΝΙΔΙ! Νικήσατε όλα τα τέρατα! +1 μόνιμο μπόνους HP!)`,
-            showVictoryPopup: true
-          }
-        };
-      }
-      return state;
+
       
     case 'HIDE_VICTORY_POPUP':
       return {
