@@ -1,5 +1,8 @@
 import { createContext, useContext, useReducer } from 'react';
 import { generateRandomRiddle, generateRandomRiddleForMap } from './RiddleManager';
+import { createMainMapState } from './MainMapState';
+import { createDungeonMapState } from './DungeonMapState';
+import { createVolcanoMapState } from './VolcanoMapState';
 
 // Game constants
 export const TILE_SIZE = 64;
@@ -38,7 +41,15 @@ export const TILE_TYPES = {
   DUNGEON_FLOOR: 'dungeon_floor', // New tile type for dungeon floor
   DUNGEON_WALL: 'dungeon_wall', // New tile type for dungeon walls
   DIRT: 'dirt', // New tile type for dirt
-  DIRT2: 'dirt2' // New tile type for dirt variation
+  DIRT2: 'dirt2', // New tile type for dirt variation
+  FIRE: 'fire', // New tile type for volcano fire
+  VOLCANO_ENTRANCE: 'volcano_entrance' // New tile type for volcano entrance
+};
+
+// Trap types
+export const TRAP_TYPES = {
+  DAMAGE: 'damage',
+  TELEPORT: 'teleport'
 };
 
 // Equipment definitions (parametrical system for future expansion)
@@ -65,6 +76,19 @@ export const EQUIPMENT_ITEMS = {
     type: 'ring',
     charges: 3,
     asset: 'ring.png'
+  },
+  axe: {
+    name: 'Magic Axe',
+    type: EQUIPMENT_TYPES.WEAPON,
+    damageBonus: 5, // adds 5 damage
+    criticalChance: 0.20, // 20% chance of critical strike
+    asset: 'axe.png'
+  },
+  magicShield: {
+    name: 'Magic Shield',
+    type: 'shield',
+    blockChance: 0.25, // 25% chance to block, increases to 40% when HP < 40
+    asset: 'magicShield.png'
   }
 };
 
@@ -88,483 +112,21 @@ const savePermanentHpBonus = (bonus) => {
   }
 };
 
-// Generate a rich medieval village with varied terrain and structures
-function generateMap() {
-  const tiles = [];
-  
-  // Initialize with mixed grass, stone, and dirt
-  for (let y = 0; y < MAP_HEIGHT; y++) {
-    const row = [];
-    for (let x = 0; x < MAP_WIDTH; x++) {
-      const rand = Math.random();
-      if (rand < 0.25) {
-        // 25% stone
-        row.push(rand < 0.125 ? TILE_TYPES.STONE : TILE_TYPES.STONE2);
-      } else if (rand < 0.45) {
-        // 20% dirt (20% of the remaining 75%)
-        row.push(rand < 0.425 ? TILE_TYPES.DIRT : TILE_TYPES.DIRT2);
-      } else {
-        // 55% grass (remaining)
-        row.push((x + y) % 2 === 0 ? TILE_TYPES.GRASS : TILE_TYPES.GRASS2);
-      }
-    }
-    tiles.push(row);
-  }
-  
-  // Create borders with walls
-  for (let x = 0; x < MAP_WIDTH; x++) {
-    tiles[0][x] = TILE_TYPES.WALL;
-    tiles[MAP_HEIGHT - 1][x] = TILE_TYPES.WALL;
-  }
-  for (let y = 0; y < MAP_HEIGHT; y++) {
-    tiles[y][0] = TILE_TYPES.WALL;
-    tiles[y][MAP_WIDTH - 1] = TILE_TYPES.WALL;
-  }
-  
-  // Create road system with proper assets
-  // Main horizontal road (Main Street) - use ROAD asset
-  for (let x = 2; x < 18; x++) {
-    tiles[7][x] = TILE_TYPES.ROAD;
-  }
-  
-  // Main vertical road (Central Avenue) - use PATH asset
-  for (let y = 2; y < 13; y++) {
-    tiles[y][9] = TILE_TYPES.PATH;
-  }
-  
-  // Left side road (North-South) - use PATH asset
-  for (let y = 3; y < 12; y++) {
-    tiles[y][4] = TILE_TYPES.PATH;
-  }
-  
-  // Right side road (North-South) - use PATH asset
-  for (let y = 3; y < 12; y++) {
-    tiles[y][14] = TILE_TYPES.PATH;
-  }
-  
-  // Add crossroads at intersections
-  tiles[7][9] = TILE_TYPES.CROSSROAD;  // Main intersection
-  tiles[7][4] = TILE_TYPES.CROSSROAD;  // Left intersection
-  tiles[7][14] = TILE_TYPES.CROSSROAD; // Right intersection
-  
-  // Add water features with correct water assets
-  // Small pond in top area
-  for (let x = 6; x < 9; x++) {
-    for (let y = 2; y < 4; y++) {
-      tiles[y][x] = (x + y) % 2 === 0 ? TILE_TYPES.WATER : TILE_TYPES.WATER2;
-    }
-  }
-  
-  // Small pond in bottom area
-  for (let x = 15; x < 19; x++) {
-    for (let y = 10; y < 13; y++) {
-      tiles[y][x] = (x + y) % 2 === 0 ? TILE_TYPES.WATER : TILE_TYPES.WATER2;
-    }
-  }
-  
-  // Add castles
-  // 2x2 castle in top-left area
-  for (let x = 1; x < 3; x++) {
-    for (let y = 1; y < 3; y++) {
-      tiles[y][x] = TILE_TYPES.CASTLE;
-    }
-  }
-  
-  // 3x3 castle in bottom-right area (moved slightly to avoid water)
-  for (let x = 16; x < 19; x++) {
-    for (let y = 12; y < 15; y++) {
-      tiles[y][x] = TILE_TYPES.CASTLE;
-    }
-  }
-  
-  // Add windmills
-  tiles[5][6] = TILE_TYPES.WINDMILL;  // Windmill near top pond
-  tiles[8][13] = TILE_TYPES.WINDMILL; // Windmill near bottom pond
-  
-  // Village 1 - Top cluster (near left road)
-  const village1Houses = [
-    [2, 2], [3, 2], [2, 3], [3, 3], [2, 4], [3, 4]
-  ];
-  
-  // Village 2 - Bottom cluster (near right road)
-  const village2Houses = [
-    [16, 10], [17, 10], [16, 11], [17, 11], [16, 12], [17, 12]
-  ];
-  
-  // Additional houses on the left side
-  const leftSideHouses = [
-    [1, 11], [1, 12], [1, 13]
-  ];
-  
-  // Additional houses on the right side
-  const rightSideHouses = [
-    [13, 11], [12, 11], [12, 12], [13, 12]
-  ];
-  
-  // Random houses scattered around
-  const randomHouses = [
-    [5, 2], [11, 2], [12, 2], [5, 5], [11, 5], [12, 5], [5, 10], [11, 10]
-  ];
-  
-  // Place village 1 houses (mixed types)
-  village1Houses.forEach(([x, y], index) => {
-    if (tiles[y] && tiles[y][x] && isWalkableTile(tiles[y][x])) {
-      const houseType = [TILE_TYPES.HOUSE1, TILE_TYPES.HOUSE2, TILE_TYPES.HOUSE3, TILE_TYPES.HOUSE4, TILE_TYPES.HOUSE5][index % 5];
-      tiles[y][x] = houseType;
-    }
-  });
-  
-  // Place village 2 houses (mixed types)
-  village2Houses.forEach(([x, y], index) => {
-    if (tiles[y] && tiles[y][x] && isWalkableTile(tiles[y][x])) {
-      const houseType = [TILE_TYPES.HOUSE1, TILE_TYPES.HOUSE2, TILE_TYPES.HOUSE3, TILE_TYPES.HOUSE4, TILE_TYPES.HOUSE5][index % 5];
-      tiles[y][x] = houseType;
-    }
-  });
-  
-  // Place random houses (mixed types)
-  randomHouses.forEach(([x, y], index) => {
-    if (tiles[y] && tiles[y][x] && isWalkableTile(tiles[y][x])) {
-      const houseType = [TILE_TYPES.HOUSE1, TILE_TYPES.HOUSE2, TILE_TYPES.HOUSE3, TILE_TYPES.HOUSE4, TILE_TYPES.HOUSE5][index % 5];
-      tiles[y][x] = houseType;
-    }
-  });
-  
-  // Place left side houses (mixed types)
-  leftSideHouses.forEach(([x, y], index) => {
-    if (tiles[y] && tiles[y][x] && isWalkableTile(tiles[y][x])) {
-      const houseType = [TILE_TYPES.HOUSE1, TILE_TYPES.HOUSE2, TILE_TYPES.HOUSE3, TILE_TYPES.HOUSE4, TILE_TYPES.HOUSE5][index % 5];
-      tiles[y][x] = houseType;
-    }
-  });
-  
-  // Place right side houses (mixed types)
-  rightSideHouses.forEach(([x, y], index) => {
-    if (tiles[y] && tiles[y][x] && isWalkableTile(tiles[y][x])) {
-      const houseType = [TILE_TYPES.HOUSE1, TILE_TYPES.HOUSE2, TILE_TYPES.HOUSE3, TILE_TYPES.HOUSE4, TILE_TYPES.HOUSE5][index % 5];
-      tiles[y][x] = houseType;
-    }
-  });
-  
-  // Add forest areas with different tree types
-  const treeAreas = [
-    {x: 1, y: 13, size: 2, type: TILE_TYPES.TREE},
-    {x: 18, y: 1, size: 2, type: TILE_TYPES.TREE2},
-    {x: 1, y: 6, size: 2, type: TILE_TYPES.TREE3},
-    {x: 18, y: 6, size: 2, type: TILE_TYPES.TREE4}
-  ];
-  
-  // Add new forest area at bottom left
-  const newForestArea = [
-    {x: 2, y: 17, type: TILE_TYPES.TREE},
-    {x: 2, y: 18, type: TILE_TYPES.TREE2},
-    {x: 1, y: 17, type: TILE_TYPES.TREE3},
-    {x: 1, y: 18, type: TILE_TYPES.TREE4},
-    {x: 3, y: 18, type: TILE_TYPES.TREE5}
-  ];
-  
-  // Add additional trees near dungeon entrance
-  const dungeonEntranceTrees = [
-    {x: 17, y: 1, type: TILE_TYPES.TREE},
-    {x: 17, y: 2, type: TILE_TYPES.TREE2},
-    {x: 18, y: 2, type: TILE_TYPES.TREE3},
-    {x: 18, y: 3, type: TILE_TYPES.TREE4}
-  ];
-  
-  treeAreas.forEach(area => {
-    for (let dx = 0; dx < area.size; dx++) {
-      for (let dy = 0; dy < area.size; dy++) {
-        const x = area.x + dx;
-        const y = area.y + dy;
-        if (x >= 1 && x < MAP_WIDTH - 1 && y >= 1 && y < MAP_HEIGHT - 1 && isWalkableTile(tiles[y][x])) {
-          tiles[y][x] = area.type;
-        }
-      }
-    }
-  });
-  
-  // Place new forest area trees
-  newForestArea.forEach(({x, y, type}) => {
-    if (x >= 1 && x < MAP_WIDTH - 1 && y >= 1 && y < MAP_HEIGHT - 1 && isWalkableTile(tiles[y][x])) {
-      tiles[y][x] = type;
-    }
-  });
-  
-  // Place dungeon entrance trees
-  dungeonEntranceTrees.forEach(({x, y, type}) => {
-    if (x >= 1 && x < MAP_WIDTH - 1 && y >= 1 && y < MAP_HEIGHT - 1 && isWalkableTile(tiles[y][x])) {
-      tiles[y][x] = type;
-    }
-  });
-  
-  // Add a few decorative elements
-  const decorativePositions = [
-    [6, 5], [13, 5], [6, 9], [13, 9]
-  ];
-  decorativePositions.forEach(([x, y], index) => {
-    if (tiles[y] && tiles[y][x] && isWalkableTile(tiles[y][x])) {
-      tiles[y][x] = index % 2 === 0 ? TILE_TYPES.FLOWERS : TILE_TYPES.ROCKS;
-    }
-  });
-  
-  // Add dungeon entrance (top right, near trees)
-  tiles[2][16] = TILE_TYPES.DUNGEON_ENTRANCE;
-  
-  return tiles;
-}
 
-// Generate the dungeon map
-function generateDungeonMap() {
-  const tiles = [];
 
-  // Initialize with mostly stone tiles and some dirt
-  for (let y = 0; y < MAP_HEIGHT; y++) {
-    const row = [];
-    for (let x = 0; x < MAP_WIDTH; x++) {
-      const rand = Math.random();
-      if (rand < 0.1) {
-        // 10% dirt
-        row.push(rand < 0.05 ? TILE_TYPES.DIRT : TILE_TYPES.DIRT2);
-      } else {
-        // 90% stone variations
-        row.push(rand < 0.45 ? TILE_TYPES.STONE : TILE_TYPES.STONE2);
-      }
-    }
-    tiles.push(row);
-  }
 
-  // Create borders with walls (same as main map)
-  for (let x = 0; x < MAP_WIDTH; x++) {
-    tiles[0][x] = TILE_TYPES.WALL;
-    tiles[MAP_HEIGHT - 1][x] = TILE_TYPES.WALL;
-  }
-  for (let y = 0; y < MAP_HEIGHT; y++) {
-    tiles[y][0] = TILE_TYPES.WALL;
-    tiles[y][MAP_WIDTH - 1] = TILE_TYPES.WALL;
-  }
 
-  // Add dungeon walls (impassable) - doubled amount
-  // Horizontal walls
-  for (let x = 5; x < 8; x++) {
-    tiles[4][x] = TILE_TYPES.DUNGEON_WALL;
-  }
-  for (let x = 12; x < 15; x++) {
-    tiles[9][x] = TILE_TYPES.DUNGEON_WALL;
-  }
-  for (let x = 3; x < 6; x++) {
-    tiles[6][x] = TILE_TYPES.DUNGEON_WALL;
-  }
-  for (let x = 14; x < 17; x++) {
-    tiles[11][x] = TILE_TYPES.DUNGEON_WALL;
-  }
-  
-  // Vertical walls
-  for (let y = 6; y < 9; y++) {
-    tiles[y][7] = TILE_TYPES.DUNGEON_WALL;
-  }
-  for (let y = 3; y < 6; y++) {
-    tiles[y][13] = TILE_TYPES.DUNGEON_WALL;
-  }
-  for (let y = 8; y < 11; y++) {
-    tiles[y][5] = TILE_TYPES.DUNGEON_WALL;
-  }
-  for (let y = 4; y < 7; y++) {
-    tiles[y][15] = TILE_TYPES.DUNGEON_WALL;
-  }
-  
-  // Additional walls around armor area (bottom left)
-  // Create a maze-like structure around (1,13)
-  for (let x = 3; x < 6; x++) {
-    tiles[12][x] = TILE_TYPES.DUNGEON_WALL;
-  }
-  for (let x = 2; x < 4; x++) {
-    if (tiles[14]) tiles[14][x] = TILE_TYPES.DUNGEON_WALL;
-  }
-  for (let y = 10; y < 13; y++) {
-    tiles[y][3] = TILE_TYPES.DUNGEON_WALL;
-  }
-  // Fix: Only access valid indices (y < MAP_HEIGHT)
-  for (let y = 11; y < 14; y++) {
-    tiles[y][2] = TILE_TYPES.DUNGEON_WALL;
-  }
 
-  // Add a couple of water areas in the dungeon
-  for (let x = 3; x < 6; x++) {
-    for (let y = 5; y < 8; y++) {
-      tiles[y][x] = (x + y) % 2 === 0 ? TILE_TYPES.WATER : TILE_TYPES.WATER2;
-    }
-  }
-  for (let x = 12; x < 15; x++) {
-    for (let y = 10; y < 13; y++) {
-      tiles[y][x] = (x + y) % 2 === 0 ? TILE_TYPES.WATER : TILE_TYPES.WATER2;
-    }
-  }
 
-  // Add two castles
-  tiles[3][3] = TILE_TYPES.CASTLE;
-  tiles[11][14] = TILE_TYPES.CASTLE;
 
-  // Dungeon Exit (same as entrance for now)
-  tiles[2][16] = TILE_TYPES.DUNGEON_ENTRANCE; // This will be the exit back to main map
 
-  return tiles;
-}
 
-// Generate monsters for the dungeon
-function generateDungeonMonsters() {
-  return [
-    // Skeletons (each twice) - some moved to guard armor area
-    { id: 201, x: 4, y: 4, hp: 35, maxHp: 35, type: 'skeleton swordfighter', isDefeated: false, proximity: 1, attackDamage: 10, fast: false },
-    { id: 202, x: 2, y: 12, hp: 35, maxHp: 35, type: 'skeleton swordfighter', isDefeated: false, proximity: 1, attackDamage: 10, fast: false }, // Moved near armor
-    { id: 203, x: 5, y: 10, hp: 25, maxHp: 25, type: 'skeleton archer', isDefeated: false, proximity: 1, attackDamage: 8, fast: false },
-    { id: 204, x: 1, y: 11, hp: 25, maxHp: 25, type: 'skeleton archer', isDefeated: false, proximity: 1, attackDamage: 8, fast: false }, // Moved near armor
-    { id: 205, x: 18, y: 12, hp: 90, maxHp: 90, type: 'skeleton mage', isDefeated: false, proximity: 2, attackDamage: 30, fast: false },
-    { id: 206, x: 2, y: 13, hp: 90, maxHp: 90, type: 'skeleton mage', isDefeated: false, proximity: 2, attackDamage: 30, fast: false }, // Moved near armor
-    { id: 207, x: 1, y: 8, hp: 20, maxHp: 20, type: 'skeleton rogue', isDefeated: false, proximity: 1, attackDamage: 6, fast: false }, // Moved near armor
-    { id: 208, x: 14, y: 2, hp: 20, maxHp: 20, type: 'skeleton rogue', isDefeated: false, proximity: 1, attackDamage: 6, fast: false },
-    // Spiders and Snakes - some moved to armor area
-    { id: 209, x: 6, y: 6, hp: 30, maxHp: 30, type: 'spider', isDefeated: false, proximity: 1, attackDamage: 6, fast: false },
-    { id: 210, x: 6, y: 13, hp: 30, maxHp: 30, type: 'spider', isDefeated: false, proximity: 1, attackDamage: 6, fast: false }, // Moved near armor
-    { id: 211, x: 7, y: 7, hp: 30, maxHp: 30, type: 'snake', isDefeated: false, proximity: 1, attackDamage: 9, fast: true },
-    { id: 212, x: 1, y: 12, hp: 30, maxHp: 30, type: 'snake', isDefeated: false, proximity: 1, attackDamage: 9, fast: true }, // Moved near armor
-    // Shadow monsters - strong enemies (25-35 damage range, using 30 as average)
-    { id: 213, x: 2, y: 1, hp: 45, maxHp: 45, type: 'shadow', isDefeated: false, proximity: 2, attackDamage: 30, fast: false }, // Shadow at 2:1
-    { id: 214, x: 12, y: 8, hp: 45, maxHp: 45, type: 'shadow', isDefeated: false, proximity: 2, attackDamage: 30, fast: false } // Random shadow in dungeon
-  ];
-}
 
-// Generate equipment items on the map (next to specific monsters)
-function generateEquipment() {
-  return [
-    {
-      id: 'sword-1',
-      type: 'equipment',
-      equipmentType: 'sword',
-      x: 17, // Next to dragon at (16, 13) - one tile to the right
-      y: 13,
-      isCollected: false,
-      guardedBy: 14 // Dragon monster id
-    },
-    {
-      id: 'shield-1', 
-      type: 'equipment',
-      equipmentType: 'shield',
-      x: 1, // Next to ghost at (2, 2) - one tile to the left
-      y: 2,
-      isCollected: false,
-      guardedBy: 13 // Ghost monster id
-    }
-  ];
-}
 
-// Helper function to check if a tile is walkable (for placing structures)
-function isWalkableTile(tileType) {
-  return tileType === TILE_TYPES.GRASS || 
-         tileType === TILE_TYPES.GRASS2 || 
-         tileType === TILE_TYPES.STONE || 
-         tileType === TILE_TYPES.STONE2;
-}
 
-// Generate healing potions on the map
-function generatePotions() {
-  const potions = [];
-  
-  // 2 potions behind monsters (in areas that require defeating monsters to reach)
-  const behindMonsterPositions = [
-    { x: 1, y: 4, healAmount: Math.floor(Math.random() * 41) + 30 }, // Behind goblin area
-    { x: 18, y: 4, healAmount: Math.floor(Math.random() * 41) + 30 }  // Behind skeleton area
-  ];
-  
-  // 4 potions in open spaces (added one more)
-  const openSpacePositions = [
-    { x: 8, y: 5, healAmount: Math.floor(Math.random() * 41) + 30 },  // Near windmill
-    { x: 10, y: 8, healAmount: Math.floor(Math.random() * 41) + 30 }, // On main road
-    { x: 6, y: 11, healAmount: Math.floor(Math.random() * 41) + 30 }, // Near bottom area
-    { x: 14, y: 6, healAmount: Math.floor(Math.random() * 41) + 30 }  // New potion location
-  ];
-  
-  // Combine all potion positions
-  const allPotionPositions = [...behindMonsterPositions, ...openSpacePositions];
-  
-  allPotionPositions.forEach((potion, index) => {
-    potions.push({
-      id: index + 1,
-      x: potion.x,
-      y: potion.y,
-      type: 'potion',
-      healAmount: potion.healAmount,
-      isCollected: false
-    });
-  });
-  
-  return potions;
-}
 
-// Generate healing potions for the dungeon
-function generateDungeonPotions() {
-  const potions = [];
-  
-  // 4 potions in the dungeon
-  const dungeonPotionPositions = [
-    { x: 4, y: 3, healAmount: Math.floor(Math.random() * 41) + 30 }, // Near first castle
-    { x: 15, y: 12, healAmount: Math.floor(Math.random() * 41) + 30 }, // Near second castle
-    { x: 8, y: 8, healAmount: Math.floor(Math.random() * 41) + 30 }, // Central area
-    { x: 11, y: 5, healAmount: Math.floor(Math.random() * 41) + 30 }  // Near water area
-  ];
-  
-  dungeonPotionPositions.forEach((potion, index) => {
-    potions.push({
-      id: 100 + index + 1, // Use different ID range for dungeon potions
-      x: potion.x,
-      y: potion.y,
-      type: 'potion',
-      healAmount: potion.healAmount,
-      isCollected: false
-    });
-  });
-  
-  return potions;
-}
 
-// Generate armor for the dungeon
-function generateDungeonArmor() {
-  return [{
-    id: 200,
-    x: 1,
-    y: 13,
-    type: 'armor',
-    name: 'Dungeon Armor',
-    defense: 2, // -2 damage reduction
-    isCollected: false
-  }];
-}
 
-function generateDungeonRing() {
-  return [
-    {
-      id: 201,
-      x: 18,
-      y: 13,
-      type: 'equipment',
-      equipmentType: 'ring',
-      name: 'Ring of Knowledge',
-      charges: 3,
-      guardedBy: 205, // Guarded by the skeleton mage at (18, 12)
-      isCollected: false
-    },
-    {
-      id: 202,
-      x: 1,
-      y: 1,
-      type: 'equipment',
-      equipmentType: 'ring',
-      name: 'Ring of Knowledge',
-      charges: 3,
-      guardedBy: 213, // Guarded by the shadow at (2, 1)
-      isCollected: false
-    }
-  ];
-}
 
 // Initial game state
 const initialState = {
@@ -581,51 +143,18 @@ const initialState = {
       armor: null,
       ring: null
     },
+    bag: {
+      weapon: [],
+      shield: [],
+      armor: []
+    },
     ringCharges: 0 // Simple counter for ring charges
   },
   currentMapId: 'main', // New: Track current map
   maps: { // New: Store multiple maps
-    main: {
-      width: MAP_WIDTH,
-      height: MAP_HEIGHT,
-      tiles: generateMap(),
-      items: [...generatePotions(), ...generateEquipment()],
-      monsters: [ // Main map monsters
-        { id: 1, x: 3, y: 3, hp: 40, maxHp: 40, type: 'goblin', isDefeated: false, proximity: 1, attackDamage: 8, fast: false },
-        { id: 2, x: 15, y: 4, hp: 35, maxHp: 35, type: 'skeleton swordfighter', isDefeated: false, proximity: 1, attackDamage: 10, fast: false },
-        { id: 15, x: 3, y: 5, hp: 25, maxHp: 25, type: 'skeleton archer', isDefeated: false, proximity: 1, attackDamage: 8, fast: false },
-        { id: 16, x: 16, y: 8, hp: 90, maxHp: 90, type: 'skeleton mage', isDefeated: false, proximity: 2, attackDamage: 30, fast: false },
-        { id: 17, x: 8, y: 11, hp: 20, maxHp: 20, type: 'skeleton rogue', isDefeated: false, proximity: 1, attackDamage: 6, fast: false },
-        { id: 3, x: 5, y: 2, hp: 30, maxHp: 30, type: 'spider', isDefeated: false, proximity: 1, attackDamage: 6, fast: false },
-        { id: 4, x: 12, y: 2, hp: 45, maxHp: 45, type: 'wolf', isDefeated: false, proximity: 1, attackDamage: 12, fast: true },
-        { id: 5, x: 11, y: 5, hp: 25, maxHp: 25, type: 'bat', isDefeated: false, proximity: 1, attackDamage: 5, fast: false },
-        { id: 6, x: 7, y: 2, hp: 35, maxHp: 35, type: 'slime', isDefeated: false, proximity: 1, attackDamage: 7, fast: false },
-        { id: 7, x: 2, y: 6, hp: 50, maxHp: 50, type: 'troll', isDefeated: false, proximity: 2, attackDamage: 15, fast: false },
-        { id: 8, x: 15, y: 11, hp: 30, maxHp: 30, type: 'crab', isDefeated: false, proximity: 2, attackDamage: 8, fast: false },
-        { id: 9, x: 15, y: 12, hp: 40, maxHp: 40, type: 'crab', isDefeated: false, proximity: 2, attackDamage: 8, fast: false },
-        { id: 10, x: 17, y: 6, hp: 35, maxHp: 35, type: 'wolf', isDefeated: false, proximity: 1, attackDamage: 12, fast: true },
-        { id: 11, x: 2, y: 13, hp: 30, maxHp: 30, type: 'snake', isDefeated: false, proximity: 1, attackDamage: 9, fast: true },
-        { id: 12, x: 18, y: 6, hp: 25, maxHp: 25, type: 'snake', isDefeated: false, proximity: 1, attackDamage: 9, fast: true },
-        { id: 13, x: 2, y: 2, hp: 60, maxHp: 60, type: 'ghost', isDefeated: false, proximity: 2, attackDamage: 18, fast: false },
-        { id: 14, x: 16, y: 13, hp: 100, maxHp: 100, type: 'dragon', isDefeated: false, proximity: 2, attackDamage: 30, fast: false }
-      ]
-    },
-    dungeon: {
-      width: MAP_WIDTH,
-      height: MAP_HEIGHT,
-      tiles: generateDungeonMap(),
-      items: (() => {
-        const potions = generateDungeonPotions();
-        const armor = generateDungeonArmor();
-        const ring = generateDungeonRing();
-        console.log('Dungeon potions:', potions);
-        console.log('Dungeon armor:', armor);
-        console.log('Dungeon ring:', ring);
-        console.log('All dungeon items:', [...potions, ...armor, ...ring]);
-        return [...potions, ...armor, ...ring];
-      })(),
-      monsters: generateDungeonMonsters() // Dungeon specific monsters
-    }
+    main: createMainMapState(),
+    dungeon: createDungeonMapState(),
+    volcano: createVolcanoMapState()
   },
   battle: {
     isActive: false,
@@ -673,7 +202,8 @@ function gameReducer(state, action) {
                         tileType !== TILE_TYPES.HOUSE5 &&
                         tileType !== TILE_TYPES.WINDMILL &&
                         tileType !== TILE_TYPES.CASTLE &&
-                        tileType !== TILE_TYPES.ROCKS;
+                        tileType !== TILE_TYPES.ROCKS &&
+                        tileType !== TILE_TYPES.FIRE;
 
       // New: Handle dungeon entrance/exit
       if (tileType === TILE_TYPES.DUNGEON_ENTRANCE) {
@@ -686,6 +216,40 @@ function gameReducer(state, action) {
           // Keep hero at the same coordinates in the new map
         } else if (state.currentMapId === 'dungeon') {
           newMapId = 'main';
+          // Keep hero at the same coordinates in the new map
+        }
+
+        return {
+          ...state,
+          hero: {
+            ...state.hero,
+            x: newHeroX,
+            y: newHeroY,
+          },
+          currentMapId: newMapId,
+          battle: { // Clear any battle state when changing maps
+            ...state.battle,
+            isActive: false,
+            currentMonster: null,
+            battleQueue: [],
+            currentRiddle: null,
+            battleMessage: '',
+            awaitingRiddleAnswer: false,
+          }
+        };
+      }
+
+      // Handle volcano entrance/exit
+      if (tileType === TILE_TYPES.VOLCANO_ENTRANCE) {
+        let newMapId = '';
+        let newHeroX = newX;
+        let newHeroY = newY;
+
+        if (state.currentMapId === 'dungeon') {
+          newMapId = 'volcano';
+          // Keep hero at the same coordinates in the new map
+        } else if (state.currentMapId === 'volcano') {
+          newMapId = 'dungeon';
           // Keep hero at the same coordinates in the new map
         }
 
@@ -804,6 +368,11 @@ function gameReducer(state, action) {
           currentMap.monsters.find(monster => monster.id === item.guardedBy)?.isDefeated
         );
         
+        // Check for traps at the new position
+        const trapAtPosition = currentMap.traps.find(trap => 
+          trap.x === newX && trap.y === newY && !trap.isActivated
+        );
+        
         if (armorAtPosition) {
           // Collect and equip the armor
           console.log('Collecting armor:', armorAtPosition);
@@ -863,6 +432,53 @@ function gameReducer(state, action) {
             
             healMessage = `You equipped the ${equipmentConfig.name}! (Εξοπλιστήκατε με το ${equipmentConfig.name}!)`;
           }
+        }
+        
+        // Handle trap activation
+        if (trapAtPosition) {
+          // Handle trap activation directly in the reducer
+          let trapMessage = '';
+          let updatedTraps = currentMap.traps;
+          
+          if (trapAtPosition.trapType === TRAP_TYPES.DAMAGE) {
+            // Damage trap
+            const newHp = Math.max(0, updatedHero.hp - trapAtPosition.damage);
+            updatedHero = {
+              ...updatedHero,
+              hp: newHp
+            };
+            trapMessage = `💥 You triggered a damage trap! Lost ${trapAtPosition.damage} HP! (💥 Ενεργοποιήσατε μια παγίδα ζημιάς! Χάσατε ${trapAtPosition.damage} HP!)`;
+          } else if (trapAtPosition.trapType === TRAP_TYPES.TELEPORT) {
+            // Teleport trap
+            updatedHero = {
+              ...updatedHero,
+              x: trapAtPosition.targetX,
+              y: trapAtPosition.targetY
+            };
+            trapMessage = `🌀 You triggered a teleport trap! Moved to (${trapAtPosition.targetX}, ${trapAtPosition.targetY})! (🌀 Ενεργοποιήσατε μια παγίδα τηλεμεταφοράς! Μετακινήθηκες στη θέση (${trapAtPosition.targetX}, ${trapAtPosition.targetY})!)`;
+          }
+          
+          // Mark trap as activated
+          updatedTraps = currentMap.traps.map(t =>
+            t.id === trapAtPosition.id ? { ...t, isActivated: true } : t
+          );
+          
+          return {
+            ...state,
+            hero: updatedHero,
+            maps: {
+              ...state.maps,
+              [state.currentMapId]: {
+                ...currentMap,
+                items: updatedItems,
+                traps: updatedTraps
+              }
+            },
+            battle: {
+              ...state.battle,
+              battleMessage: trapMessage || healMessage
+            }
+          };
         }
         
         return {
@@ -996,9 +612,19 @@ function gameReducer(state, action) {
       // Calculate damage with equipment bonus
       let baseDamage = Math.floor(Math.random() * 6) + 10; // 10-15 damage
       const weaponEquipped = state.hero.equipment.weapon;
+      let criticalStrike = false;
+      
       if (weaponEquipped && EQUIPMENT_ITEMS[weaponEquipped]) {
         const weaponBonus = Math.floor(Math.random() * EQUIPMENT_ITEMS[weaponEquipped].damageBonus) + 1;
         baseDamage += weaponBonus;
+        
+        // Check for critical strike (axe only)
+        if (weaponEquipped === 'axe' && EQUIPMENT_ITEMS[weaponEquipped].criticalChance) {
+          if (Math.random() < EQUIPMENT_ITEMS[weaponEquipped].criticalChance) {
+            baseDamage *= 2;
+            criticalStrike = true;
+          }
+        }
       }
       
       const updatedMonster = {
@@ -1034,7 +660,9 @@ function gameReducer(state, action) {
         battle: {
           ...state.battle,
           currentMonster: updatedMonster,
-                      battleMessage: weaponEquipped ? 
+                      battleMessage: criticalStrike ? 
+              `CRITICAL STRIKE! You hit for ${baseDamage} damage! (ΚΡΙΤΙΚΗ ΚΡΟΥΣΗ! Χτυπήσατε για ${baseDamage} ζημιά!)` :
+              weaponEquipped ? 
               `You hit for ${baseDamage} damage! (weapon bonus included) (Χτυπήσατε για ${baseDamage} ζημιά! (συμπεριλαμβανομένου του μπόνους όπλου))` : 
               `You hit for ${baseDamage} damage! (Χτυπήσατε για ${baseDamage} ζημιά!)`,
           turn: 'monster',
@@ -1061,9 +689,19 @@ function gameReducer(state, action) {
         let strongDamage = Math.floor(Math.random() * 11) + 25; // 25-35 damage
         // Apply weapon bonus to riddle attacks too
         const weaponEquipped = state.hero.equipment.weapon;
+        let criticalStrike = false;
+        
         if (weaponEquipped && EQUIPMENT_ITEMS[weaponEquipped]) {
           const weaponBonus = Math.floor(Math.random() * EQUIPMENT_ITEMS[weaponEquipped].damageBonus) + 1;
           strongDamage += weaponBonus;
+          
+          // Check for critical strike (axe only)
+          if (weaponEquipped === 'axe' && EQUIPMENT_ITEMS[weaponEquipped].criticalChance) {
+            if (Math.random() < EQUIPMENT_ITEMS[weaponEquipped].criticalChance) {
+              strongDamage *= 2;
+              criticalStrike = true;
+            }
+          }
         }
         
         const strongUpdatedMonster = {
@@ -1168,7 +806,14 @@ function gameReducer(state, action) {
       
       // Check shield for block chance
       if (shieldEquipped && EQUIPMENT_ITEMS[shieldEquipped] && EQUIPMENT_ITEMS[shieldEquipped].blockChance) {
-        blocked = Math.random() < EQUIPMENT_ITEMS[shieldEquipped].blockChance;
+        let blockChance = EQUIPMENT_ITEMS[shieldEquipped].blockChance;
+        
+        // Magic shield increases block chance when HP is low
+        if (shieldEquipped === 'magicShield' && state.hero.hp < 40) {
+          blockChance = 0.40; // 40% when HP < 40
+        }
+        
+        blocked = Math.random() < blockChance;
       }
       
       if (blocked) {
@@ -1357,12 +1002,101 @@ function gameReducer(state, action) {
         };
       }
       
-      // OTHER EQUIPMENT: Check guardian
-      const guardianDefeated = currentMap.monsters.find(monster => 
-        monster.id === equipmentToCollect.guardedBy
-      )?.isDefeated;
+      // OTHER EQUIPMENT: Check guardian (if any)
+      if (equipmentToCollect.guardedBy !== null && equipmentToCollect.guardedBy !== undefined) {
+        const guardianDefeated = currentMap.monsters.find(monster => 
+          monster.id === equipmentToCollect.guardedBy
+        )?.isDefeated;
+        
+        if (!guardianDefeated) return state;
+      }
+      // If no guardian (guardedBy is null/undefined), allow collection
       
-      if (!guardianDefeated) return state;
+      // Determine equipment slot
+      const equipmentSlot = equipmentConfig.type === 'shield' ? 'shield' : 
+                           equipmentConfig.type === EQUIPMENT_TYPES.WEAPON ? 'weapon' : 
+                           equipmentConfig.type;
+      
+      // Check if hero already has equipment in this slot
+      const currentEquipped = state.hero.equipment[equipmentSlot];
+      
+      if (currentEquipped) {
+        // Add current equipped item to bag and equip new item
+        return {
+          ...state,
+          hero: {
+            ...state.hero,
+            equipment: {
+              ...state.hero.equipment,
+              [equipmentSlot]: equipmentToCollect.equipmentType
+            },
+            bag: {
+              ...state.hero.bag,
+              [equipmentSlot]: [...state.hero.bag[equipmentSlot], currentEquipped]
+            }
+          },
+          maps: {
+            ...state.maps,
+            [state.currentMapId]: {
+              ...currentMap,
+              items: currentMap.items.map(item =>
+                item.id === equipmentToCollect.id ? { ...item, isCollected: true } : item
+              )
+            }
+          },
+          battle: {
+            ...state.battle,
+            battleMessage: `You equipped the ${equipmentConfig.name}! Previous ${EQUIPMENT_ITEMS[currentEquipped].name} moved to bag.`
+          }
+        };
+      } else {
+        // No current equipment, just equip the new item
+        return {
+          ...state,
+          hero: {
+            ...state.hero,
+            equipment: {
+              ...state.hero.equipment,
+              [equipmentSlot]: equipmentToCollect.equipmentType
+            }
+          },
+          maps: {
+            ...state.maps,
+            [state.currentMapId]: {
+              ...currentMap,
+              items: currentMap.items.map(item =>
+                item.id === equipmentToCollect.id ? { ...item, isCollected: true } : item
+              )
+            }
+          },
+          battle: {
+            ...state.battle,
+            battleMessage: `You equipped the ${equipmentConfig.name}!`
+          }
+        };
+      }
+      
+    case 'EQUIP_FROM_BAG':
+      const { slot, itemType } = action.payload;
+      const bagItems = state.hero.bag[slot];
+      
+      if (!bagItems || bagItems.length === 0) return state;
+      
+      // Find the item in the bag
+      const itemIndex = bagItems.indexOf(itemType);
+      if (itemIndex === -1) return state;
+      
+      // Get current equipped item
+      const currentlyEquipped = state.hero.equipment[slot];
+      
+      // Remove item from bag
+      const newBagItems = [...bagItems];
+      newBagItems.splice(itemIndex, 1);
+      
+      // If there was a currently equipped item, add it back to bag
+      if (currentlyEquipped) {
+        newBagItems.push(currentlyEquipped);
+      }
       
       return {
         ...state,
@@ -1370,21 +1104,16 @@ function gameReducer(state, action) {
           ...state.hero,
           equipment: {
             ...state.hero.equipment,
-            [equipmentConfig.type === 'shield' ? 'shield' : equipmentConfig.type]: equipmentToCollect.equipmentType
-          }
-        },
-        maps: {
-          ...state.maps,
-          [state.currentMapId]: {
-            ...currentMap,
-            items: currentMap.items.map(item =>
-              item.id === equipmentToCollect.id ? { ...item, isCollected: true } : item
-            )
+            [slot]: itemType
+          },
+          bag: {
+            ...state.hero.bag,
+            [slot]: newBagItems
           }
         },
         battle: {
           ...state.battle,
-          battleMessage: `You equipped the ${equipmentConfig.name}!`
+          battleMessage: `You equipped ${EQUIPMENT_ITEMS[itemType].name} from your bag!`
         }
       };
       
@@ -1450,6 +1179,8 @@ function gameReducer(state, action) {
       
 
       
+
+      
     case 'HIDE_VICTORY_POPUP':
       return {
         ...state,
@@ -1470,42 +1201,18 @@ function gameReducer(state, action) {
           ...initialState.hero,
           permanentHpBonus: 0,
           maxHp: 100,
-          hp: 100 // Ensure hero starts with full HP
+          hp: 100, // Ensure hero starts with full HP
+          bag: {
+            weapon: [],
+            shield: [],
+            armor: []
+          }
         },
         currentMapId: 'main', // Ensure we reset to the main map
         maps: { // Re-initialize maps for a fresh start
-          main: {
-            width: MAP_WIDTH,
-            height: MAP_HEIGHT,
-            tiles: generateMap(),
-            items: [...generatePotions(), ...generateEquipment()],
-            monsters: [ // Main map monsters (initial state)
-              { id: 1, x: 3, y: 3, hp: 40, maxHp: 40, type: 'goblin', isDefeated: false, proximity: 1, attackDamage: 8, fast: false },
-              { id: 2, x: 15, y: 4, hp: 35, maxHp: 35, type: 'skeleton swordfighter', isDefeated: false, proximity: 1, attackDamage: 10, fast: false },
-              { id: 15, x: 3, y: 5, hp: 25, maxHp: 25, type: 'skeleton archer', isDefeated: false, proximity: 1, attackDamage: 8, fast: false },
-              { id: 16, x: 16, y: 8, hp: 90, maxHp: 90, type: 'skeleton mage', isDefeated: false, proximity: 2, attackDamage: 30, fast: false },
-              { id: 17, x: 8, y: 11, hp: 20, maxHp: 20, type: 'skeleton rogue', isDefeated: false, proximity: 1, attackDamage: 6, fast: false },
-              { id: 3, x: 5, y: 2, hp: 30, maxHp: 30, type: 'spider', isDefeated: false, proximity: 1, attackDamage: 6, fast: false },
-              { id: 4, x: 12, y: 2, hp: 45, maxHp: 45, type: 'wolf', isDefeated: false, proximity: 1, attackDamage: 12, fast: true },
-              { id: 5, x: 11, y: 5, hp: 25, maxHp: 25, type: 'bat', isDefeated: false, proximity: 1, attackDamage: 5, fast: false },
-              { id: 6, x: 7, y: 2, hp: 35, maxHp: 35, type: 'slime', isDefeated: false, proximity: 1, attackDamage: 7, fast: false },
-              { id: 7, x: 2, y: 6, hp: 50, maxHp: 50, type: 'troll', isDefeated: false, proximity: 2, attackDamage: 15, fast: false },
-              { id: 8, x: 15, y: 11, hp: 30, maxHp: 30, type: 'crab', isDefeated: false, proximity: 2, attackDamage: 8, fast: false },
-              { id: 9, x: 15, y: 12, hp: 40, maxHp: 40, type: 'crab', isDefeated: false, proximity: 2, attackDamage: 8, fast: false },
-              { id: 10, x: 17, y: 6, hp: 35, maxHp: 35, type: 'wolf', isDefeated: false, proximity: 1, attackDamage: 12, fast: true },
-              { id: 11, x: 2, y: 13, hp: 30, maxHp: 30, type: 'snake', isDefeated: false, proximity: 1, attackDamage: 9, fast: true },
-              { id: 12, x: 18, y: 6, hp: 25, maxHp: 25, type: 'snake', isDefeated: false, proximity: 1, attackDamage: 9, fast: true },
-              { id: 13, x: 2, y: 2, hp: 60, maxHp: 60, type: 'ghost', isDefeated: false, proximity: 2, attackDamage: 18, fast: false },
-              { id: 14, x: 16, y: 13, hp: 100, maxHp: 100, type: 'dragon', isDefeated: false, proximity: 2, attackDamage: 30, fast: false }
-            ]
-          },
-          dungeon: {
-            width: MAP_WIDTH,
-            height: MAP_HEIGHT,
-            tiles: generateDungeonMap(),
-            items: [],
-            monsters: generateDungeonMonsters()
-          }
+          main: createMainMapState(),
+          dungeon: createDungeonMapState(),
+          volcano: createVolcanoMapState()
         }
       };
       
@@ -1519,7 +1226,19 @@ const GameContext = createContext();
 
 // Provider component
 export function GameProvider({ children }) {
-  const [state, dispatch] = useReducer(gameReducer, initialState);
+  // Load permanent HP bonus from localStorage and create initial state
+  const savedPermanentBonus = loadPermanentHpBonus();
+  const initialGameState = {
+    ...initialState,
+    hero: {
+      ...initialState.hero,
+      permanentHpBonus: savedPermanentBonus,
+      maxHp: 100 + savedPermanentBonus,
+      hp: 100 + savedPermanentBonus
+    }
+  };
+  
+  const [state, dispatch] = useReducer(gameReducer, initialGameState);
   
   return (
     <GameContext.Provider value={{ state, dispatch }}>

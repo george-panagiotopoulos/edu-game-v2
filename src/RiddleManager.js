@@ -532,11 +532,218 @@ const spellingRiddles = [
   }
 ];
 
+// Volcano-specific math riddles (Greek)
+const volcanoMathRiddles = [
+  // Simple equations (a+3=5, a=?)
+  {
+    question: "Αν α + 3 = 5, τότε α = ?",
+    options: ["2", "3", "4", "5"],
+    answer: "2",
+    category: "Volcano-Math"
+  },
+  {
+    question: "Αν α + 2 = 7, τότε α = ?",
+    options: ["3", "4", "5", "6"],
+    answer: "5",
+    category: "Volcano-Math"
+  },
+  {
+    question: "Αν α + 4 = 9, τότε α = ?",
+    options: ["3", "4", "5", "6"],
+    answer: "5",
+    category: "Volcano-Math"
+  },
+  {
+    question: "Αν α + 1 = 6, τότε α = ?",
+    options: ["4", "5", "6", "7"],
+    answer: "5",
+    category: "Volcano-Math"
+  },
+  {
+    question: "Αν α + 5 = 10, τότε α = ?",
+    options: ["3", "4", "5", "6"],
+    answer: "5",
+    category: "Volcano-Math"
+  },
+  {
+    question: "Αν α + 2 = 4, τότε α = ?",
+    options: ["1", "2", "3", "4"],
+    answer: "2",
+    category: "Volcano-Math"
+  },
+  {
+    question: "Αν α + 3 = 8, τότε α = ?",
+    options: ["4", "5", "6", "7"],
+    answer: "5",
+    category: "Volcano-Math"
+  },
+  {
+    question: "Αν α + 1 = 3, τότε α = ?",
+    options: ["1", "2", "3", "4"],
+    answer: "2",
+    category: "Volcano-Math"
+  },
+  // Negative numbers
+  {
+    question: "Αν α + 3 = 2, τότε α = ?",
+    options: ["-2", "-1", "0", "1"],
+    answer: "-1",
+    category: "Volcano-Math"
+  },
+  {
+    question: "Αν α + 4 = 2, τότε α = ?",
+    options: ["-3", "-2", "-1", "0"],
+    answer: "-2",
+    category: "Volcano-Math"
+  },
+  // Zero
+  {
+    question: "Αν α + 5 = 5, τότε α = ?",
+    options: ["-1", "0", "1", "2"],
+    answer: "0",
+    category: "Volcano-Math"
+  },
+  
+  // Square roots
+  {
+    question: "Ποια είναι η τετραγωνική ρίζα του 1;",
+    options: ["0", "1", "2", "3"],
+    answer: "1",
+    category: "Volcano-Math"
+  },
+  {
+    question: "Ποια είναι η τετραγωνική ρίζα του 4;",
+    options: ["1", "2", "3", "4"],
+    answer: "2",
+    category: "Volcano-Math"
+  },
+  {
+    question: "Ποια είναι η τετραγωνική ρίζα του 9;",
+    options: ["2", "3", "4", "5"],
+    answer: "3",
+    category: "Volcano-Math"
+  },
+  {
+    question: "Ποια είναι η τετραγωνική ρίζα του 16;",
+    options: ["3", "4", "5", "6"],
+    answer: "4",
+    category: "Volcano-Math"
+  },
+  {
+    question: "Ποια είναι η τετραγωνική ρίζα του 25;",
+    options: ["4", "5", "6", "7"],
+    answer: "5",
+    category: "Volcano-Math"
+  },
+  {
+    question: "Ποια είναι η τετραγωνική ρίζα του 36;",
+    options: ["5", "6", "7", "8"],
+    answer: "6",
+    category: "Volcano-Math"
+  },
+  {
+    question: "Ποια είναι η τετραγωνική ρίζα του 0;",
+    options: ["0", "1", "2", "3"],
+    answer: "0",
+    category: "Volcano-Math"
+  },
+  
+  // Geometric shapes
+  {
+    question: "Πόσες πλευρές έχει ένα τρίγωνο;",
+    options: ["2", "3", "4", "5"],
+    answer: "3",
+    category: "Volcano-Math"
+  },
+  {
+    question: "Πόσες πλευρές έχει ένα τετράγωνο;",
+    options: ["3", "4", "5", "6"],
+    answer: "4",
+    category: "Volcano-Math"
+  },
+  {
+    question: "Πόσες πλευρές έχει ένα εξάγωνο;",
+    options: ["4", "5", "6", "7"],
+    answer: "6",
+    category: "Volcano-Math"
+  },
+  {
+    question: "Πόσες πλευρές έχει ένας κύκλος;",
+    options: ["0", "1", "2", "3"],
+    answer: "0",
+    category: "Volcano-Math"
+  }
+];
+
+// Volcano-specific geography proximity riddles (Greek)
+const volcanoGeographyProximityRiddles = [
+  {
+    question: "Ποια χώρα είναι δίπλα στη Γαλλία;",
+    options: ["Ισπανία", "ΗΠΑ", "Αυστραλία", "Κίνα"],
+    answer: "Ισπανία",
+    category: "Geography-Proximity"
+  },
+  {
+    question: "Ποια χώρα είναι δίπλα στη Βραζιλία;",
+    options: ["Αργεντινή", "ΗΠΑ", "Αυστραλία", "Ιαπωνία"],
+    answer: "Αργεντινή",
+    category: "Geography-Proximity"
+  },
+  {
+    question: "Ποια χώρα είναι δίπλα στη Νέα Ζηλανδία;",
+    options: ["Αυστραλία", "ΗΠΑ", "Καναδάς", "Κίνα"],
+    answer: "Αυστραλία",
+    category: "Geography-Proximity"
+  },
+  {
+    question: "Ποια χώρα είναι δίπλα στη Νότια Κορέα;",
+    options: ["Βόρεια Κορέα", "ΗΠΑ", "Αυστραλία", "Βραζιλία"],
+    answer: "Βόρεια Κορέα",
+    category: "Geography-Proximity"
+  },
+  {
+    question: "Ποια χώρα είναι δίπλα στη Νότια Κορέα;",
+    options: ["Κίνα", "ΗΠΑ", "Αυστραλία", "Βραζιλία"],
+    answer: "Κίνα",
+    category: "Geography-Proximity"
+  },
+  {
+    question: "Ποια χώρα είναι δίπλα στις ΗΠΑ;",
+    options: ["Καναδάς", "Αυστραλία", "Κίνα", "Βραζιλία"],
+    answer: "Καναδάς",
+    category: "Geography-Proximity"
+  },
+  {
+    question: "Ποια χώρα είναι δίπλα στη Γερμανία;",
+    options: ["Γαλλία", "ΗΠΑ", "Αυστραλία", "Κίνα"],
+    answer: "Γαλλία",
+    category: "Geography-Proximity"
+  },
+  {
+    question: "Ποια χώρα είναι δίπλα στην Ιταλία;",
+    options: ["Γαλλία", "ΗΠΑ", "Αυστραλία", "Κίνα"],
+    answer: "Γαλλία",
+    category: "Geography-Proximity"
+  },
+  {
+    question: "Ποια χώρα είναι δίπλα στην Ισπανία;",
+    options: ["Πορτογαλία", "ΗΠΑ", "Αυστραλία", "Κίνα"],
+    answer: "Πορτογαλία",
+    category: "Geography-Proximity"
+  },
+  {
+    question: "Ποια χώρα είναι δίπλα στην Ελλάδα;",
+    options: ["Τουρκία", "ΗΠΑ", "Αυστραλία", "Βραζιλία"],
+    answer: "Τουρκία",
+    category: "Geography-Proximity"
+  }
+];
+
 // Generate math riddles dynamically
 const mathRiddles = generateMathRiddles();
 
 // Combine all riddles
-const allRiddles = [...mathRiddles, ...geographyRiddles, ...spellingRiddles, ...germanToGreekRiddles, ...greekToGermanRiddles];
+const allRiddles = [...mathRiddles, ...geographyRiddles, ...spellingRiddles, ...germanToGreekRiddles, ...greekToGermanRiddles, ...volcanoMathRiddles, ...volcanoGeographyProximityRiddles];
 
 // Function to generate a random riddle
 export function generateRandomRiddle() {
@@ -549,9 +756,14 @@ export function generateRandomRiddleForMap(mapId) {
     // In dungeon, only German and spelling riddles
     const dungeonRiddles = [...germanToGreekRiddles, ...greekToGermanRiddles, ...spellingRiddles];
     return dungeonRiddles[Math.floor(Math.random() * dungeonRiddles.length)];
+  } else if (mapId === 'volcano') {
+    // In volcano, only volcano-specific categories
+    const volcanoRiddles = [...volcanoMathRiddles, ...volcanoGeographyProximityRiddles];
+    return volcanoRiddles[Math.floor(Math.random() * volcanoRiddles.length)];
   } else {
-    // In main map, all riddles including math and geography
-    return allRiddles[Math.floor(Math.random() * allRiddles.length)];
+    // In main map, all riddles EXCEPT volcano-specific ones
+    const mainMapRiddles = [...mathRiddles, ...geographyRiddles, ...spellingRiddles, ...germanToGreekRiddles, ...greekToGermanRiddles];
+    return mainMapRiddles[Math.floor(Math.random() * mainMapRiddles.length)];
   }
 }
 
@@ -590,6 +802,16 @@ export function getGreekToGermanRiddles() {
   return greekToGermanRiddles;
 }
 
+// Function to get volcano math riddles only
+export function getVolcanoMathRiddles() {
+  return volcanoMathRiddles;
+}
+
+// Function to get volcano geography proximity riddles only
+export function getVolcanoGeographyProximityRiddles() {
+  return volcanoGeographyProximityRiddles;
+}
+
 // Function to get total number of riddles
 export function getTotalRiddles() {
   return allRiddles.length;
@@ -606,4 +828,4 @@ export function regenerateMathRiddles() {
 }
 
 // Export individual riddle arrays for testing
-export { mathRiddles, geographyRiddles, spellingRiddles, germanToGreekRiddles, greekToGermanRiddles, allRiddles }; 
+export { mathRiddles, geographyRiddles, spellingRiddles, germanToGreekRiddles, greekToGermanRiddles, volcanoMathRiddles, volcanoGeographyProximityRiddles, allRiddles }; 

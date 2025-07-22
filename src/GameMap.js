@@ -1,5 +1,5 @@
 import React from 'react';
-import { useGame, TILE_SIZE, TILE_TYPES } from './GameState'; // Import TILE_TYPES
+import { useGame, TILE_SIZE, TILE_TYPES, EQUIPMENT_ITEMS } from './GameState'; // Import TILE_TYPES and EQUIPMENT_ITEMS
 import { getTileAsset, getItemAsset, getEquipmentAsset } from './AssetManager';
 import Hero from './Hero';
 import Monster from './Monster';
@@ -43,6 +43,8 @@ function GameMap() {
               }}
               title={tile === TILE_TYPES.DUNGEON_ENTRANCE ? 
                 (currentMapId === 'main' ? 'Enter Dungeon (Μπείτε στο Μπουντρούμι)' : 'Exit Dungeon (Έξοδος από το Μπουντρούμι)') : 
+                tile === TILE_TYPES.VOLCANO_ENTRANCE ? 
+                (currentMapId === 'dungeon' ? 'Enter Volcano (Μπείτε στο Ηφαίστειο)' : 'Exit Volcano (Έξοδος από το Ηφαίστειο)') : 
                 ''}
             />
           ))
@@ -134,7 +136,7 @@ function GameMap() {
             !item.isCollected
           )
           .map(equipment => {
-            const guardianDefeated = (currentMapId === 'main' ? state.maps.main.monsters : state.maps.dungeon.monsters).find(monster => monster.id === equipment.guardedBy)?.isDefeated; // Use current map monsters
+            const guardianDefeated = equipment.guardedBy ? currentMap.monsters.find(monster => monster.id === equipment.guardedBy)?.isDefeated : true; // Use current map monsters, or true if no guardian
             return (
               <div
                 key={`equipment-${equipment.id}`}
@@ -161,12 +163,17 @@ function GameMap() {
                   opacity: guardianDefeated ? 1 : 0.8
                 }}
                 title={guardianDefeated ? 
-                  `${equipment.equipmentType.charAt(0).toUpperCase() + equipment.equipmentType.slice(1)} - Click to collect!` :
-                  `${equipment.equipmentType.charAt(0).toUpperCase() + equipment.equipmentType.slice(1)} - Defeat the guardian monster first!`
+                  `${EQUIPMENT_ITEMS[equipment.equipmentType]?.name || equipment.equipmentType} - Click to collect!` :
+                  `${EQUIPMENT_ITEMS[equipment.equipmentType]?.name || equipment.equipmentType} - Defeat the guardian monster first!`
                 }
                 onClick={() => {
+                  console.log('Equipment clicked:', equipment);
+                  console.log('Guardian defeated:', guardianDefeated);
                   if (guardianDefeated) {
+                    console.log('Dispatching COLLECT_EQUIPMENT for:', equipment.id);
                     dispatch({ type: 'COLLECT_EQUIPMENT', payload: { equipmentId: equipment.id } });
+                  } else {
+                    console.log('Equipment not collectible - guardian not defeated');
                   }
                 }}
               />

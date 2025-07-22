@@ -31,7 +31,9 @@ export const TILE_ASSETS = {
   dungeon_floor: 'medievalTile_02.png', // Using a stone tile for dungeon floor
   dungeon_wall: 'medievalStructure_07.png', // Dungeon walls
   dirt: 'medievalTile_13.png',          // Dirt tile 13
-  dirt2: 'medievalTile_14.png'          // Dirt tile 14
+  dirt2: 'medievalTile_14.png',         // Dirt tile 14
+  fire: 'fire_tile.jpg',                // Fire tile for volcano
+  volcano_entrance: 'medievalStructure_13.png' // Using same asset as dungeon entrance for now
 };
 
 // Monster mappings to cute monster set
@@ -51,7 +53,10 @@ export const MONSTER_ASSETS = {
   ghost: 'spirit.png',
   banshee: 'banshee.png',
   crab: 'crab.png',
-  shadow: 'shadow.png'
+  shadow: 'shadow.png',
+  'black imp': 'black imp.png',
+  'red imp': 'red imp.png',
+  golem: 'golem.png'
 };
 
 // Hero asset (armored knight from monster set)
@@ -61,7 +66,9 @@ export const HERO_ASSET = 'armor.png';
 export const EQUIPMENT_ASSETS = {
   sword: 'sword.png',
   shield: 'shield.jpeg',
-  ring: 'ring.png'
+  ring: 'ring.png',
+  axe: 'axe.png',
+  magicShield: 'magic_shield.png'
 };
 
 // Item assets

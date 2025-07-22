@@ -1,10 +1,44 @@
 import React from 'react';
-import { TILE_SIZE, useGame } from './GameState';
+import { TILE_SIZE, useGame, EQUIPMENT_ITEMS, EQUIPMENT_TYPES } from './GameState';
 import { getHeroAsset, getEquipmentAsset, getItemAsset } from './AssetManager';
 
 function Hero({ x, y }) {
   const { state } = useGame();
   const { hero } = state;
+  
+  // Helper function to generate tooltip text for equipment
+  const getEquipmentTooltipText = (equipmentType) => {
+    const equipment = EQUIPMENT_ITEMS[equipmentType];
+    if (!equipment) return '';
+    
+    let tooltipText = `<strong>${equipment.name}</strong><br/>`;
+    
+    if (equipment.type === 'weapon' || equipment.type === EQUIPMENT_TYPES.WEAPON) {
+      tooltipText += `+${equipment.damageBonus} damage bonus<br/>`;
+      if (equipment.criticalChance) {
+        tooltipText += `${Math.round(equipment.criticalChance * 100)}% critical strike chance<br/>`;
+      }
+      tooltipText += `(+${equipment.damageBonus} μπόνους ζημιάς<br/>`;
+      if (equipment.criticalChance) {
+        tooltipText += `${Math.round(equipment.criticalChance * 100)}% πιθανότητα κρίσιμης κρούσης)`;
+      } else {
+        tooltipText += ')';
+      }
+    } else if (equipment.type === 'shield') {
+      tooltipText += `${Math.round(equipment.blockChance * 100)}% block chance<br/>`;
+      if (equipmentType === 'magicShield') {
+        tooltipText += `(increases to 40% when HP < 40)<br/>`;
+      }
+      tooltipText += `(${Math.round(equipment.blockChance * 100)}% πιθανότητα αποκλεισμού<br/>`;
+      if (equipmentType === 'magicShield') {
+        tooltipText += `(αυξάνεται στο 40% όταν HP < 40))`;
+      } else {
+        tooltipText += ')';
+      }
+    }
+    
+    return tooltipText;
+  };
   
   return (
     <div
@@ -53,12 +87,9 @@ function Hero({ x, y }) {
               alt="Weapon" 
               className="tooltip-image"
             />
-            <div className="tooltip-text">
-              <strong>Knight Sword</strong><br/>
-              +3-5 damage bonus<br/>
-              (Ξίφος Ιππότη)<br/>
-              +3-5 μπόνους ζημιάς
-            </div>
+            <div className="tooltip-text" 
+                 dangerouslySetInnerHTML={{ __html: getEquipmentTooltipText(hero.equipment.weapon) }}
+            />
           </div>
         </div>
       )}
@@ -131,12 +162,9 @@ function Hero({ x, y }) {
               alt="Shield" 
               className="tooltip-image"
             />
-            <div className="tooltip-text">
-              <strong>Knight Shield</strong><br/>
-              25% block chance<br/>
-              (Ασπίδα Ιππότη)<br/>
-              25% πιθανότητα αποκλεισμού
-            </div>
+            <div className="tooltip-text" 
+                 dangerouslySetInnerHTML={{ __html: getEquipmentTooltipText(hero.equipment.shield) }}
+            />
           </div>
         </div>
       )}
