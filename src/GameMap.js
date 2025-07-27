@@ -39,13 +39,33 @@ function GameMap() {
                 backgroundImage: `url(${getTileAsset(tile)})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat'
+                backgroundRepeat: 'no-repeat',
+                cursor: tile === TILE_TYPES.SHOP ? 'pointer' : 'default'
               }}
               title={tile === TILE_TYPES.DUNGEON_ENTRANCE ? 
                 (currentMapId === 'main' ? 'Enter Dungeon (Μπείτε στο Μπουντρούμι)' : 'Exit Dungeon (Έξοδος από το Μπουντρούμι)') : 
                 tile === TILE_TYPES.VOLCANO_ENTRANCE ? 
                 (currentMapId === 'dungeon' ? 'Enter Volcano (Μπείτε στο Ηφαίστειο)' : 'Exit Volcano (Έξοδος από το Ηφαίστειο)') : 
+                tile === TILE_TYPES.FOREST_ENTRANCE ? 
+                (currentMapId === 'main' ? 'Enter Forest (Μπείτε στο Δάσος)' : 'Exit Forest (Έξοδος από το Δάσος)') : 
+                tile === TILE_TYPES.SHOP ? 
+                'Shop (Κατάστημα)' : 
                 ''}
+              onClick={tile === TILE_TYPES.SHOP ? () => {
+                console.log('Shop clicked at position:', x, y, 'tile type:', tile);
+                // Check if hero is adjacent to the shop
+                const heroX = hero.x;
+                const heroY = hero.y;
+                const isAdjacent = Math.abs(heroX - x) <= 1 && Math.abs(heroY - y) <= 1;
+                console.log('Hero position:', heroX, heroY, 'Shop position:', x, y, 'Is adjacent:', isAdjacent);
+                
+                if (isAdjacent) {
+                  // Trigger shop interaction by dispatching a special action
+                  dispatch({ type: 'SHOP_INTERACTION', payload: { x, y } });
+                } else {
+                  console.log('Hero is not adjacent to shop, cannot interact');
+                }
+              } : undefined}
             />
           ))
         )}
@@ -136,7 +156,15 @@ function GameMap() {
             !item.isCollected
           )
           .map(equipment => {
-            const guardianDefeated = equipment.guardedBy ? currentMap.monsters.find(monster => monster.id === equipment.guardedBy)?.isDefeated : true; // Use current map monsters, or true if no guardian
+            console.log('Rendering equipment:', equipment);
+            console.log('Equipment asset URL:', getEquipmentAsset(equipment.equipmentType));
+            const guardianDefeated = equipment.guardedBy ? 
+              (Array.isArray(equipment.guardedBy) ? 
+                equipment.guardedBy.every(guardianId => 
+                  currentMap.monsters.find(monster => monster.id === guardianId)?.isDefeated
+                ) : 
+                currentMap.monsters.find(monster => monster.id === equipment.guardedBy)?.isDefeated
+              ) : true; // Use current map monsters, or true if no guardian
             return (
               <div
                 key={`equipment-${equipment.id}`}
@@ -162,6 +190,9 @@ function GameMap() {
                     'equipment-locked-pulse 3s infinite ease-in-out',
                   opacity: guardianDefeated ? 1 : 0.8
                 }}
+                onError={(e) => {
+                  console.error('Equipment image failed to load:', equipment.equipmentType, e);
+                }}
                 title={guardianDefeated ? 
                   `${EQUIPMENT_ITEMS[equipment.equipmentType]?.name || equipment.equipmentType} - Click to collect!` :
                   `${EQUIPMENT_ITEMS[equipment.equipmentType]?.name || equipment.equipmentType} - Defeat the guardian monster first!`
@@ -176,7 +207,20 @@ function GameMap() {
                     console.log('Equipment not collectible - guardian not defeated');
                   }
                 }}
-              />
+              >
+                {/* Add an img element to test loading */}
+                <img 
+                  src={getEquipmentAsset(equipment.equipmentType)} 
+                  alt={equipment.equipmentType}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain'
+                  }}
+                  onLoad={() => console.log(`${equipment.equipmentType} image loaded successfully`)}
+                  onError={(e) => console.error(`${equipment.equipmentType} image failed to load:`, e)}
+                />
+              </div>
             );
           })
         }

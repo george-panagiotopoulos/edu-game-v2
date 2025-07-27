@@ -238,4 +238,191 @@ export const volcanoMathRiddles = [
     answer: "0",
     category: "Volcano-Math"
   }
-]; 
+];
+
+// Forest-specific math riddles
+export const forestMathRiddles = [
+  // 3-digit addition riddles (first digit 1, 2, or 3)
+  {
+    question: "What is 123 + 234?",
+    options: ["357", "358", "356", "359"],
+    answer: "357",
+    category: "Forest-Math"
+  },
+  {
+    question: "What is 145 + 267?",
+    options: ["412", "413", "411", "414"],
+    answer: "412",
+    category: "Forest-Math"
+  },
+  {
+    question: "What is 189 + 234?",
+    options: ["423", "424", "422", "425"],
+    answer: "423",
+    category: "Forest-Math"
+  },
+  {
+    question: "What is 156 + 289?",
+    options: ["445", "446", "444", "447"],
+    answer: "445",
+    category: "Forest-Math"
+  },
+  {
+    question: "What is 234 + 345?",
+    options: ["579", "580", "578", "581"],
+    answer: "579",
+    category: "Forest-Math"
+  },
+  {
+    question: "What is 267 + 378?",
+    options: ["645", "646", "644", "647"],
+    answer: "645",
+    category: "Forest-Math"
+  },
+  {
+    question: "What is 289 + 345?",
+    options: ["634", "635", "633", "636"],
+    answer: "634",
+    category: "Forest-Math"
+  },
+  {
+    question: "What is 312 + 423?",
+    options: ["735", "736", "734", "737"],
+    answer: "735",
+    category: "Forest-Math"
+  },
+  {
+    question: "What is 345 + 456?",
+    options: ["801", "802", "800", "803"],
+    answer: "801",
+    category: "Forest-Math"
+  },
+  {
+    question: "What is 378 + 489?",
+    options: ["867", "868", "866", "869"],
+    answer: "867",
+    category: "Forest-Math"
+  },
+  
+  // Equations with expanded range (-5 to 20) and subtraction
+  {
+    question: "Αν α + 5 = 15, τότε α = ?",
+    options: ["8", "9", "10", "11"],
+    answer: "10",
+    category: "Forest-Math"
+  },
+  {
+    question: "Αν α - 3 = 12, τότε α = ?",
+    options: ["14", "15", "16", "17"],
+    answer: "15",
+    category: "Forest-Math"
+  },
+  {
+    question: "Αν α + 7 = 18, τότε α = ?",
+    options: ["10", "11", "12", "13"],
+    answer: "11",
+    category: "Forest-Math"
+  },
+  {
+    question: "Αν α - 4 = 8, τότε α = ?",
+    options: ["11", "12", "13", "14"],
+    answer: "12",
+    category: "Forest-Math"
+  },
+  {
+    question: "Αν α + 2 = 19, τότε α = ?",
+    options: ["16", "17", "18", "19"],
+    answer: "17",
+    category: "Forest-Math"
+  },
+  {
+    question: "Αν α - 6 = 9, τότε α = ?",
+    options: ["14", "15", "16", "17"],
+    answer: "15",
+    category: "Forest-Math"
+  },
+  {
+    question: "Αν α + 8 = 20, τότε α = ?",
+    options: ["11", "12", "13", "14"],
+    answer: "12",
+    category: "Forest-Math"
+  },
+  {
+    question: "Αν α - 2 = 13, τότε α = ?",
+    options: ["14", "15", "16", "17"],
+    answer: "15",
+    category: "Forest-Math"
+  },
+  {
+    question: "Αν α + 3 = 16, τότε α = ?",
+    options: ["12", "13", "14", "15"],
+    answer: "13",
+    category: "Forest-Math"
+  },
+  {
+    question: "Αν α - 5 = 10, τότε α = ?",
+    options: ["14", "15", "16", "17"],
+    answer: "15",
+    category: "Forest-Math"
+  },
+  {
+    question: "Αν α + 4 = 14, τότε α = ?",
+    options: ["9", "10", "11", "12"],
+    answer: "10",
+    category: "Forest-Math"
+  },
+  {
+    question: "Αν α - 3 = 7, τότε α = ?",
+    options: ["9", "10", "11", "12"],
+    answer: "10",
+    category: "Forest-Math"
+  },
+  {
+    question: "Αν α + 6 = 17, τότε α = ?",
+    options: ["10", "11", "12", "13"],
+    answer: "11",
+    category: "Forest-Math"
+  },
+  {
+    question: "Αν α - 4 = 6, τότε α = ?",
+    options: ["9", "10", "11", "12"],
+    answer: "10",
+    category: "Forest-Math"
+  },
+  {
+    question: "Αν α + 1 = 20, τότε α = ?",
+    options: ["18", "19", "20", "21"],
+    answer: "19",
+    category: "Forest-Math"
+  },
+  {
+    question: "Αν α - 2 = 8, τότε α = ?",
+    options: ["9", "10", "11", "12"],
+    answer: "10",
+    category: "Forest-Math"
+  },
+  {
+    question: "Αν α + 5 = 13, τότε α = ?",
+    options: ["7", "8", "9", "10"],
+    answer: "8",
+    category: "Forest-Math"
+  },
+  {
+    question: "Αν α - 1 = 9, τότε α = ?",
+    options: ["9", "10", "11", "12"],
+    answer: "10",
+    category: "Forest-Math"
+  },
+  {
+    question: "Αν α + 3 = 11, τότε α = ?",
+    options: ["7", "8", "9", "10"],
+    answer: "8",
+    category: "Forest-Math"
+  },
+  {
+    question: "Αν α - 5 = 5, τότε α = ?",
+    options: ["9", "10", "11", "12"],
+    answer: "10",
+    category: "Forest-Math"
+  }
+];

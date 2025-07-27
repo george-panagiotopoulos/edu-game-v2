@@ -1,16 +1,16 @@
 // Riddle Manager - Centralized riddle system for the educational RPG game
 
 // Import riddles from separate files
-import { generateMathRiddles, volcanoMathRiddles } from './riddles/mathRiddles.js';
+import { generateMathRiddles, volcanoMathRiddles, forestMathRiddles } from './riddles/mathRiddles.js';
 import { geographyRiddles, volcanoGeographyProximityRiddles } from './riddles/geographyRiddles.js';
-import { germanToGreekRiddles, greekToGermanRiddles } from './riddles/germanRiddles.js';
-import { spellingRiddles } from './riddles/spellingRiddles.js';
+import { germanToGreekRiddles, greekToGermanRiddles, forestGermanMathRiddles } from './riddles/germanRiddles.js';
+import { spellingRiddles, forestSpellingRiddles } from './riddles/spellingRiddles.js';
 
 // Generate math riddles dynamically
 const mathRiddles = generateMathRiddles();
 
 // Combine all riddles
-const allRiddles = [...mathRiddles, ...geographyRiddles, ...spellingRiddles, ...germanToGreekRiddles, ...greekToGermanRiddles, ...volcanoMathRiddles, ...volcanoGeographyProximityRiddles];
+const allRiddles = [...mathRiddles, ...geographyRiddles, ...spellingRiddles, ...germanToGreekRiddles, ...greekToGermanRiddles, ...volcanoMathRiddles, ...volcanoGeographyProximityRiddles, ...forestMathRiddles, ...forestSpellingRiddles, ...forestGermanMathRiddles];
 
 // Function to generate a random riddle
 export function generateRandomRiddle() {
@@ -27,8 +27,12 @@ export function generateRandomRiddleForMap(mapId) {
     // In volcano, only volcano-specific categories
     const volcanoRiddles = [...volcanoMathRiddles, ...volcanoGeographyProximityRiddles];
     return volcanoRiddles[Math.floor(Math.random() * volcanoRiddles.length)];
+  } else if (mapId === 'forest') {
+    // In forest, only forest-specific categories
+    const forestRiddles = [...forestMathRiddles, ...forestSpellingRiddles, ...forestGermanMathRiddles];
+    return forestRiddles[Math.floor(Math.random() * forestRiddles.length)];
   } else {
-    // In main map, all riddles EXCEPT volcano-specific ones
+    // In main map, all riddles EXCEPT volcano-specific and forest-specific ones
     const mainMapRiddles = [...mathRiddles, ...geographyRiddles, ...spellingRiddles, ...germanToGreekRiddles, ...greekToGermanRiddles];
     return mainMapRiddles[Math.floor(Math.random() * mainMapRiddles.length)];
   }
@@ -79,6 +83,21 @@ export function getVolcanoGeographyProximityRiddles() {
   return volcanoGeographyProximityRiddles;
 }
 
+// Function to get forest math riddles only
+export function getForestMathRiddles() {
+  return forestMathRiddles;
+}
+
+// Function to get forest spelling riddles only
+export function getForestSpellingRiddles() {
+  return forestSpellingRiddles;
+}
+
+// Function to get forest German math riddles only
+export function getForestGermanMathRiddles() {
+  return forestGermanMathRiddles;
+}
+
 // Function to get total number of riddles
 export function getTotalRiddles() {
   return allRiddles.length;
@@ -95,4 +114,4 @@ export function regenerateMathRiddles() {
 }
 
 // Export individual riddle arrays for testing
-export { mathRiddles, geographyRiddles, spellingRiddles, germanToGreekRiddles, greekToGermanRiddles, volcanoMathRiddles, volcanoGeographyProximityRiddles, allRiddles }; 
+export { mathRiddles, geographyRiddles, spellingRiddles, germanToGreekRiddles, greekToGermanRiddles, volcanoMathRiddles, volcanoGeographyProximityRiddles, forestMathRiddles, forestSpellingRiddles, forestGermanMathRiddles, allRiddles }; 

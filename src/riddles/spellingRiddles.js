@@ -116,4 +116,50 @@ export const spellingRiddles = [
     answer: "μπάνιο",
     category: "Spelling"
   }
-]; 
+];
+
+// Forest-specific spelling riddles
+export const forestSpellingRiddles = [
+  {
+    question: "Ποια είναι η σωστή γραφή της λέξης;",
+    options: ["θάλασσα", "θάλλασα", "θάλασα", "θάλλασσα"],
+    answer: "θάλασσα",
+    category: "Forest-Spelling"
+  },
+  {
+    question: "Ποια είναι η σωστή γραφή της λέξης;",
+    options: ["άλλος", "άλος", "άλλως", "άλλλος"],
+    answer: "άλλος",
+    category: "Forest-Spelling"
+  },
+  {
+    question: "Ποια είναι η σωστή γραφή της λέξης;",
+    options: ["μπιφτέκι", "μπιφταίκι", "μπηφτέκι", "μπιφτέκυ"],
+    answer: "μπιφτέκι",
+    category: "Forest-Spelling"
+  },
+  {
+    question: "Ποια είναι η σωστή γραφή της λέξης;",
+    options: ["παγώνο", "παγόνο", "παγόνω", "παγώνω"],
+    answer: "παγώνω",
+    category: "Forest-Spelling"
+  },
+  {
+    question: "Ποια είναι η σωστή γραφή της λέξης;",
+    options: ["συμπληρώνω", "σημπληρώνω", "σοιμπλιρώνω", "συμπληρώνο"],
+    answer: "συμπληρώνω",
+    category: "Forest-Spelling"
+  },
+  {
+    question: "Ποια είναι η σωστή γραφή της λέξης;",
+    options: ["καυτερός", "καφτερός", "καυτερώς", "καυταιρός"],
+    answer: "καυτερός",
+    category: "Forest-Spelling"
+  },
+  {
+    question: "Ποια είναι η σωστή γραφή της λέξης;",
+    options: ["εξήντα", "αιξήντα", "εξίντα", "εξοιντα"],
+    answer: "εξήντα",
+    category: "Forest-Spelling"
+  }
+];

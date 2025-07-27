@@ -5,6 +5,8 @@ import { getMonsterAsset } from './AssetManager';
 function Monster({ monster }) {
   const isSkeleton = monster.type.includes('skeleton');
   const assetUrl = getMonsterAsset(monster.type);
+  const isHydra = monster.type === 'hydra' && monster.isBoss;
+  const monsterSize = isHydra && monster.size ? monster.size : 1;
   
   // Debug logging for skeletons
   if (isSkeleton) {
@@ -18,8 +20,8 @@ function Monster({ monster }) {
         position: 'absolute',
         left: monster.x * TILE_SIZE,
         top: monster.y * TILE_SIZE,
-        width: TILE_SIZE,
-        height: TILE_SIZE,
+        width: TILE_SIZE * monsterSize,
+        height: TILE_SIZE * monsterSize,
         backgroundImage: `url(${assetUrl})`,
         backgroundSize: 'contain',
         backgroundPosition: 'center',
@@ -35,7 +37,7 @@ function Monster({ monster }) {
         alignItems: 'center',
         justifyContent: 'center'
       }}
-      title={`${monster.type} (${monster.hp}/${monster.maxHp} HP)`}
+      title={`${monster.type} (${monster.hp}/${monster.maxHp} HP)${isHydra ? ` - Heads: ${monster.heads}` : ''}`}
     >
       {/* Add an img element to test loading */}
       {isSkeleton && (

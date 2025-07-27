@@ -165,6 +165,11 @@ function BattleScreen() {
                 />
                 <div className="health-text">
                   {battle.currentMonster.hp}/{battle.currentMonster.maxHp}
+                  {battle.currentMonster.type === 'hydra' && battle.currentMonster.isBoss && (
+                    <div style={{ fontSize: '0.8em', color: '#FFD700' }}>
+                      Heads: {battle.currentMonster.heads}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

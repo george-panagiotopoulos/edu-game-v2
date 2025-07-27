@@ -3,6 +3,7 @@ import { generateRandomRiddleForMap } from './RiddleManager';
 import { createMainMapState } from './maps/MainMapState';
 import { createDungeonMapState } from './maps/DungeonMapState';
 import { createVolcanoMapState } from './maps/VolcanoMapState';
+import { createForestMapState } from './maps/ForestMapState';
 
 // Game constants
 export const TILE_SIZE = 64;
@@ -43,7 +44,9 @@ export const TILE_TYPES = {
   DIRT: 'dirt', // New tile type for dirt
   DIRT2: 'dirt2', // New tile type for dirt variation
   FIRE: 'fire', // New tile type for volcano fire
-  VOLCANO_ENTRANCE: 'volcano_entrance' // New tile type for volcano entrance
+  VOLCANO_ENTRANCE: 'volcano_entrance', // New tile type for volcano entrance
+  FOREST_ENTRANCE: 'forest_entrance', // New tile type for forest entrance
+  SHOP: 'shop' // New tile type for shop
 };
 
 // Trap types
@@ -89,6 +92,14 @@ export const EQUIPMENT_ITEMS = {
     type: 'shield',
     blockChance: 0.25, // 25% chance to block, increases to 40% when HP < 40
     asset: 'magicShield.png'
+  },
+  flamingSword: {
+    name: 'Flaming Sword',
+    type: EQUIPMENT_TYPES.WEAPON,
+    damageBonus: 5, // adds 5 damage
+    criticalChance: 0.20, // 20% chance of critical strike
+    fireEffect: true, // sets target on fire
+    asset: 'flaming sword.png'
   }
 };
 
@@ -148,13 +159,16 @@ const initialState = {
       shield: [],
       armor: []
     },
-    ringCharges: 0 // Simple counter for ring charges
+    ringCharges: 0, // Simple counter for ring charges
+    onFire: false, // New: fire effect state
+    fireDamage: 0 // New: fire damage counter
   },
   currentMapId: 'main', // New: Track current map
   maps: { // New: Store multiple maps
     main: createMainMapState(),
     dungeon: createDungeonMapState(),
-    volcano: createVolcanoMapState()
+    volcano: createVolcanoMapState(),
+    forest: createForestMapState()
   },
   battle: {
     isActive: false,
@@ -203,7 +217,8 @@ function gameReducer(state, action) {
                         tileType !== TILE_TYPES.WINDMILL &&
                         tileType !== TILE_TYPES.CASTLE &&
                         tileType !== TILE_TYPES.ROCKS &&
-                        tileType !== TILE_TYPES.FIRE;
+                        tileType !== TILE_TYPES.FIRE &&
+                        tileType !== TILE_TYPES.SHOP;
 
       // New: Handle dungeon entrance/exit
       if (tileType === TILE_TYPES.DUNGEON_ENTRANCE) {
@@ -272,12 +287,62 @@ function gameReducer(state, action) {
           }
         };
       }
-      
+
+      // Handle forest entrance/exit
+      if (tileType === TILE_TYPES.FOREST_ENTRANCE) {
+        let newMapId = '';
+        let newHeroX = newX;
+        let newHeroY = newY;
+
+        if (state.currentMapId === 'main') {
+          newMapId = 'forest';
+          // Keep hero at the same coordinates in the new map
+        } else if (state.currentMapId === 'forest') {
+          newMapId = 'main';
+          // Exit to village at (2,10) as requested
+          newHeroX = 2;
+          newHeroY = 10;
+        }
+
+        return {
+          ...state,
+          hero: {
+            ...state.hero,
+            x: newHeroX,
+            y: newHeroY,
+          },
+          currentMapId: newMapId,
+          battle: { // Clear any battle state when changing maps
+            ...state.battle,
+            isActive: false,
+            currentMonster: null,
+            battleQueue: [],
+            currentRiddle: null,
+            battleMessage: '',
+            awaitingRiddleAnswer: false,
+          }
+        };
+      }
+
+
+
       if (isWalkable) {
         // Check for monsters in proximity from the current map's monsters
         const monstersInProximity = currentMap.monsters.filter(monster => {
           if (monster.isDefeated) return false;
           
+          // Handle 2x2 monsters (like hydra)
+          const monsterSize = monster.size || 1;
+          const monsterEndX = monster.x + monsterSize - 1;
+          const monsterEndY = monster.y + monsterSize - 1;
+          
+          // Check if hero is within the monster's area or proximity
+          const withinMonsterArea = newX >= monster.x && newX <= monsterEndX && 
+                                   newY >= monster.y && newY <= monsterEndY;
+          
+          if (withinMonsterArea) return true;
+          
+          // Check proximity distance
           const distance = Math.max(
             Math.abs(monster.x - newX),
             Math.abs(monster.y - newY)
@@ -627,6 +692,28 @@ function gameReducer(state, action) {
             showVictoryPopup: true
           }
         };
+      } else if (state.currentMapId === 'forest' && allMonstersDefeatedOnCurrentMap) {
+        // Apply permanent HP bonus when all forest monsters are defeated
+        const newPermanentHpBonus = state.hero.permanentHpBonus + 1;
+        const newMaxHp = 100 + newPermanentHpBonus;
+        const newHp = Math.min(state.hero.hp + 1, newMaxHp); // Heal 1 HP and increase max HP
+
+        savePermanentHpBonus(newPermanentHpBonus);
+
+        updatedStateAfterDefeat = {
+          ...updatedStateAfterDefeat,
+          hero: {
+            ...updatedStateAfterDefeat.hero,
+            hp: newHp,
+            maxHp: newMaxHp,
+            permanentHpBonus: newPermanentHpBonus
+          },
+          battle: {
+            ...updatedStateAfterDefeat.battle,
+            battleMessage: `🎉 FOREST COMPLETED! You defeated all forest monsters! +1 permanent HP bonus! (🎉 ΟΛΟΚΛΗΡΩΣΑΤΕ ΤΟ ΔΑΣΟΣ! Νικήσατε όλα τα τέρατα του δάσους! +1 μόνιμο μπόνους HP!)`,
+            showVictoryPopup: true
+          }
+        };
       }
       return updatedStateAfterDefeat;
       
@@ -635,6 +722,7 @@ function gameReducer(state, action) {
       let baseDamage = Math.floor(Math.random() * 6) + 10; // 10-15 damage
       const weaponEquipped = state.hero.equipment.weapon;
       let criticalStrike = false;
+      let fireEffect = false;
       
       if (weaponEquipped && EQUIPMENT_ITEMS[weaponEquipped]) {
         const weaponBonus = Math.floor(Math.random() * EQUIPMENT_ITEMS[weaponEquipped].damageBonus) + 1;
@@ -647,12 +735,41 @@ function gameReducer(state, action) {
             criticalStrike = true;
           }
         }
+        
+        // Check for fire effect (flaming sword only)
+        if (weaponEquipped === 'flamingSword' && EQUIPMENT_ITEMS[weaponEquipped].fireEffect) {
+          fireEffect = true;
+        }
       }
       
-      const updatedMonster = {
+      // Special handling for hydra
+      let updatedMonster = {
         ...state.battle.currentMonster,
-        hp: Math.max(0, state.battle.currentMonster.hp - baseDamage)
+        hp: Math.max(0, state.battle.currentMonster.hp - baseDamage),
+        onFire: fireEffect ? true : state.battle.currentMonster.onFire || false
       };
+      
+      // Hydra head mechanics
+      if (updatedMonster.type === 'hydra' && updatedMonster.isBoss) {
+        const weaponEquipped = state.hero.equipment.weapon;
+        const hasFlamingSword = weaponEquipped === 'flamingSword';
+        
+        // Calculate head damage (each head has 15 HP)
+        const headDamage = Math.min(baseDamage, updatedMonster.headHp);
+        const headsLost = Math.floor(baseDamage / updatedMonster.headHp);
+        
+        if (headsLost > 0) {
+          if (hasFlamingSword) {
+            // With flaming sword: heads are permanently lost
+            updatedMonster.heads = Math.max(0, updatedMonster.heads - headsLost);
+            // Damage will be calculated dynamically in MONSTER_ATTACK
+          } else {
+            // Without flaming sword: for each head lost, grow 2 new ones
+            updatedMonster.heads = updatedMonster.heads + headsLost; // -1 + 2 = +1 per head lost
+            // Damage will be calculated dynamically in MONSTER_ATTACK
+          }
+        }
+      }
       
       if (updatedMonster.hp <= 0) {
         return {
@@ -682,11 +799,20 @@ function gameReducer(state, action) {
         battle: {
           ...state.battle,
           currentMonster: updatedMonster,
-                      battleMessage: criticalStrike ? 
+                      battleMessage: (() => {
+            let message = criticalStrike ? 
               `CRITICAL STRIKE! You hit for ${baseDamage} damage! (ΚΡΙΤΙΚΗ ΚΡΟΥΣΗ! Χτυπήσατε για ${baseDamage} ζημιά!)` :
               weaponEquipped ? 
               `You hit for ${baseDamage} damage! (weapon bonus included) (Χτυπήσατε για ${baseDamage} ζημιά! (συμπεριλαμβανομένου του μπόνους όπλου))` : 
-              `You hit for ${baseDamage} damage! (Χτυπήσατε για ${baseDamage} ζημιά!)`,
+              `You hit for ${baseDamage} damage! (Χτυπήσατε για ${baseDamage} ζημιά!)`;
+            
+            // Add hydra head information
+            if (updatedMonster.type === 'hydra' && updatedMonster.isBoss) {
+              message += ` Hydra has ${updatedMonster.heads} heads remaining!`;
+            }
+            
+            return message;
+          })(),
           turn: 'monster',
           heroAttacking: true,
           monsterAttacking: false
@@ -712,6 +838,7 @@ function gameReducer(state, action) {
         // Apply weapon bonus to riddle attacks too
         const weaponEquipped = state.hero.equipment.weapon;
         let criticalStrike = false;
+        let fireEffect = false;
         
         if (weaponEquipped && EQUIPMENT_ITEMS[weaponEquipped]) {
           const weaponBonus = Math.floor(Math.random() * EQUIPMENT_ITEMS[weaponEquipped].damageBonus) + 1;
@@ -723,12 +850,40 @@ function gameReducer(state, action) {
               strongDamage *= 2;
             }
           }
+          
+          // Check for fire effect (flaming sword only)
+          if (weaponEquipped === 'flamingSword' && EQUIPMENT_ITEMS[weaponEquipped].fireEffect) {
+            fireEffect = true;
+          }
         }
         
-        const strongUpdatedMonster = {
+        // Special handling for hydra
+        let strongUpdatedMonster = {
           ...state.battle.currentMonster,
-          hp: Math.max(0, state.battle.currentMonster.hp - strongDamage)
+          hp: Math.max(0, state.battle.currentMonster.hp - strongDamage),
+          onFire: fireEffect ? true : state.battle.currentMonster.onFire || false
         };
+        
+        // Hydra head mechanics
+        if (strongUpdatedMonster.type === 'hydra' && strongUpdatedMonster.isBoss) {
+          const hasFlamingSword = weaponEquipped === 'flamingSword';
+          
+          // Calculate head damage (each head has 15 HP)
+          const headDamage = Math.min(strongDamage, strongUpdatedMonster.headHp);
+          const headsLost = Math.floor(strongDamage / strongUpdatedMonster.headHp);
+          
+          if (headsLost > 0) {
+            if (hasFlamingSword) {
+              // With flaming sword: heads are permanently lost
+              strongUpdatedMonster.heads = Math.max(0, strongUpdatedMonster.heads - headsLost);
+              // Damage will be calculated dynamically in MONSTER_ATTACK
+            } else {
+              // Without flaming sword: for each head lost, grow 2 new ones
+              strongUpdatedMonster.heads = strongUpdatedMonster.heads + headsLost; // -1 + 2 = +1 per head lost
+              // Damage will be calculated dynamically in MONSTER_ATTACK
+            }
+          }
+        }
         
         if (strongUpdatedMonster.hp <= 0) {
           return {
@@ -762,9 +917,18 @@ function gameReducer(state, action) {
             currentMonster: strongUpdatedMonster,
             currentRiddle: null,
             awaitingRiddleAnswer: false,
-            battleMessage: weaponEquipped ? 
-              `Correct! You hit for ${strongDamage} damage! (weapon bonus included) (Σωστά! Χτυπήσατε για ${strongDamage} ζημιά! (συμπεριλαμβανομένου του μπόνους όπλου))` :
-              `Correct! You hit for ${strongDamage} damage! (Σωστά! Χτυπήσατε για ${strongDamage} ζημιά!)`,
+            battleMessage: (() => {
+              let message = weaponEquipped ? 
+                `Correct! You hit for ${strongDamage} damage! (weapon bonus included) (Σωστά! Χτυπήσατε για ${strongDamage} ζημιά! (συμπεριλαμβανομένου του μπόνους όπλου))` :
+                `Correct! You hit for ${strongDamage} damage! (Σωστά! Χτυπήσατε για ${strongDamage} ζημιά!)`;
+              
+              // Add hydra head information
+              if (strongUpdatedMonster.type === 'hydra' && strongUpdatedMonster.isBoss) {
+                message += ` Hydra has ${strongUpdatedMonster.heads} heads remaining!`;
+              }
+              
+              return message;
+            })(),
             turn: 'monster',
             heroAttacking: true,
             monsterAttacking: false
@@ -814,6 +978,68 @@ function gameReducer(state, action) {
     case 'MONSTER_ATTACK':
       let monsterAttackDamage = state.battle.currentMonster.attackDamage;
       
+      // Special hydra damage calculation
+      if (state.battle.currentMonster.type === 'hydra' && state.battle.currentMonster.isBoss) {
+        // Each head hits independently with 3-5 damage
+        const heads = state.battle.currentMonster.heads;
+        let totalDamage = 0;
+        
+        for (let i = 0; i < heads; i++) {
+          totalDamage += Math.floor(Math.random() * 3) + 3; // 3-5 damage per head
+        }
+        
+        // Minimum damage of 25 regardless of head count
+        monsterAttackDamage = Math.max(25, totalDamage);
+      }
+      
+      // Troll double damage chance (25%)
+      let doubleDamageMessage = '';
+      if (state.battle.currentMonster.type === 'troll') {
+        const doubleDamageChance = 0.25; // 25% chance
+        if (Math.random() < doubleDamageChance) {
+          monsterAttackDamage *= 2;
+          doubleDamageMessage = `💥 Double damage! (Διπλή ζημιά!) `;
+        }
+      }
+      
+      // Apply fire damage to monster if it's on fire
+      let fireDamageMessage = '';
+      if (state.battle.currentMonster.onFire) {
+        const fireDamage = 2;
+        const monsterAfterFire = {
+          ...state.battle.currentMonster,
+          hp: Math.max(0, state.battle.currentMonster.hp - fireDamage)
+        };
+        fireDamageMessage = `🔥 The ${state.battle.currentMonster.type} takes ${fireDamage} fire damage! `;
+        
+        // If monster dies from fire damage
+        if (monsterAfterFire.hp <= 0) {
+          return {
+            ...state,
+            maps: {
+              ...state.maps,
+              [state.currentMapId]: {
+                ...currentMap,
+                monsters: currentMap.monsters.map(m => 
+                  m.id === monsterAfterFire.id ? { ...m, isDefeated: true } : m
+                )
+              }
+            },
+            battle: {
+              ...state.battle,
+              currentMonster: monsterAfterFire,
+              battleMessage: `${fireDamageMessage}The ${monsterAfterFire.type} was defeated by fire!`,
+              turn: 'victory',
+              monsterAttacking: false,
+              heroAttacking: false
+            }
+          };
+        }
+        
+        // Update monster with fire damage
+        monsterAttackDamage = monsterAfterFire.attackDamage;
+      }
+      
       // Check for armor damage reduction and shield block
       const armorEquipped = state.hero.equipment.armor;
       const shieldEquipped = state.hero.equipment.shield;
@@ -822,7 +1048,12 @@ function gameReducer(state, action) {
       
       // Check armor for damage reduction
       if (armorEquipped && armorEquipped.defense) {
-        damageReduction = armorEquipped.defense;
+        // Special case: hydra takes extra damage reduction
+        if (state.battle.currentMonster.type === 'hydra' && state.battle.currentMonster.isBoss) {
+          damageReduction = 3; // 3 damage reduction vs hydra
+        } else {
+          damageReduction = armorEquipped.defense; // Normal damage reduction vs other monsters
+        }
       }
       
       // Check shield for block chance
@@ -867,12 +1098,20 @@ function gameReducer(state, action) {
       
 
       const damageMessage = blocked ? 
-        `The ${state.battle.currentMonster.type} attacks but you block it with your shield! (Το ${state.battle.currentMonster.type} επιτίθεται αλλά το αποκλείετε με την ασπίδα σας!)` :
-        `The ${state.battle.currentMonster.type} attacks you for ${monsterAttackDamage} damage! (Το ${state.battle.currentMonster.type} σας επιτίθεται για ${monsterAttackDamage} ζημιά!)`;
+        `${fireDamageMessage}The ${state.battle.currentMonster.type} attacks but you block it with your shield! (Το ${state.battle.currentMonster.type} επιτίθεται αλλά το αποκλείετε με την ασπίδα σας!)` :
+        (() => {
+          if (state.battle.currentMonster.type === 'hydra' && state.battle.currentMonster.isBoss) {
+            return `${fireDamageMessage}${doubleDamageMessage}The Hydra's ${state.battle.currentMonster.heads} heads attack you for ${monsterAttackDamage} damage! (Τα ${state.battle.currentMonster.heads} κεφάλια της Ύδρας σας επιτίθενται για ${monsterAttackDamage} ζημιά!)`;
+          } else {
+            return `${fireDamageMessage}${doubleDamageMessage}The ${state.battle.currentMonster.type} attacks you for ${monsterAttackDamage} damage! (Το ${state.battle.currentMonster.type} σας επιτίθεται για ${monsterAttackDamage} ζημιά!)`;
+          }
+        })();
       
       // If this was the last attack in the queue, return control to hero
       const remainingQueue = hasQueuedAttack ? state.battle.attackQueue.slice(1) : [];
       const isLastAttack = hasQueuedAttack && remainingQueue.length === 0;
+      
+
       
       return {
         ...state,
@@ -985,14 +1224,35 @@ function gameReducer(state, action) {
       }
       return state;
       
+    case 'SHOP_INTERACTION':
+      return {
+        ...state,
+        battle: {
+          ...state.battle,
+          isActive: false,
+          currentMonster: null,
+          battleQueue: [],
+          currentRiddle: null,
+          battleMessage: 'Shop is closed right now, please return later. (Το κατάστημα είναι κλειστό τώρα, παρακαλώ επιστρέψτε αργότερα.)',
+          awaitingRiddleAnswer: false,
+        }
+      };
+      
     case 'COLLECT_EQUIPMENT':
       if (!currentMap) return state;
+      
+      console.log('COLLECT_EQUIPMENT called with:', action.payload);
       
       const equipmentToCollect = currentMap.items.find(item => 
         item.id === action.payload.equipmentId
       );
       
-      if (!equipmentToCollect || equipmentToCollect.isCollected) return state;
+      console.log('Equipment to collect:', equipmentToCollect);
+      
+      if (!equipmentToCollect || equipmentToCollect.isCollected) {
+        console.log('Equipment not found or already collected');
+        return state;
+      }
       
       const equipmentConfig = EQUIPMENT_ITEMS[equipmentToCollect.equipmentType];
       
@@ -1025,11 +1285,32 @@ function gameReducer(state, action) {
       
       // OTHER EQUIPMENT: Check guardian (if any)
       if (equipmentToCollect.guardedBy !== null && equipmentToCollect.guardedBy !== undefined) {
-        const guardianDefeated = currentMap.monsters.find(monster => 
-          monster.id === equipmentToCollect.guardedBy
-        )?.isDefeated;
+        console.log('Equipment has guardians:', equipmentToCollect.guardedBy);
         
-        if (!guardianDefeated) return state;
+        let guardianDefeated = true;
+        
+        if (Array.isArray(equipmentToCollect.guardedBy)) {
+          // Multiple guardians - all must be defeated
+          console.log('Checking multiple guardians:', equipmentToCollect.guardedBy);
+          guardianDefeated = equipmentToCollect.guardedBy.every(guardianId => {
+            const monster = currentMap.monsters.find(monster => monster.id === guardianId);
+            console.log(`Guardian ${guardianId}:`, monster);
+            return monster?.isDefeated;
+          });
+        } else {
+          // Single guardian
+          console.log('Checking single guardian:', equipmentToCollect.guardedBy);
+          const monster = currentMap.monsters.find(monster => monster.id === equipmentToCollect.guardedBy);
+          console.log('Guardian monster:', monster);
+          guardianDefeated = monster?.isDefeated;
+        }
+        
+        console.log('All guardians defeated:', guardianDefeated);
+        
+        if (!guardianDefeated) {
+          console.log('Guardian not defeated, cannot collect equipment');
+          return state;
+        }
       }
       // If no guardian (guardedBy is null/undefined), allow collection
       
@@ -1233,7 +1514,8 @@ function gameReducer(state, action) {
         maps: { // Re-initialize maps for a fresh start
           main: createMainMapState(),
           dungeon: createDungeonMapState(),
-          volcano: createVolcanoMapState()
+          volcano: createVolcanoMapState(),
+          forest: createForestMapState()
         }
       };
       

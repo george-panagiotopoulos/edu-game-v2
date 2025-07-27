@@ -250,4 +250,68 @@ export const greekToGermanRiddles = [
     answer: "Tante",
     category: "German"
   }
-]; 
+];
+
+// Forest-specific German math riddles (numbers as words)
+export const forestGermanMathRiddles = [
+  {
+    question: "Was ist eins plus zwei?",
+    options: ["drei", "vier", "fünf", "sechs"],
+    answer: "drei",
+    category: "Forest-German"
+  },
+  {
+    question: "Was ist fünf plus drei?",
+    options: ["sieben", "acht", "neun", "zehn"],
+    answer: "acht",
+    category: "Forest-German"
+  },
+  {
+    question: "Was ist sieben plus vier?",
+    options: ["zehn", "elf", "zwölf", "dreizehn"],
+    answer: "elf",
+    category: "Forest-German"
+  },
+  {
+    question: "Was ist neun plus sechs?",
+    options: ["vierzehn", "fünfzehn", "sechzehn", "siebzehn"],
+    answer: "fünfzehn",
+    category: "Forest-German"
+  },
+  {
+    question: "Was ist acht plus sieben?",
+    options: ["vierzehn", "fünfzehn", "sechzehn", "siebzehn"],
+    answer: "fünfzehn",
+    category: "Forest-German"
+  },
+  {
+    question: "Was ist zehn minus drei?",
+    options: ["fünf", "sechs", "sieben", "acht"],
+    answer: "sieben",
+    category: "Forest-German"
+  },
+  {
+    question: "Was ist zwölf minus fünf?",
+    options: ["fünf", "sechs", "sieben", "acht"],
+    answer: "sieben",
+    category: "Forest-German"
+  },
+  {
+    question: "Was ist fünfzehn minus acht?",
+    options: ["fünf", "sechs", "sieben", "acht"],
+    answer: "sieben",
+    category: "Forest-German"
+  },
+  {
+    question: "Was ist elf minus vier?",
+    options: ["fünf", "sechs", "sieben", "acht"],
+    answer: "sieben",
+    category: "Forest-German"
+  },
+  {
+    question: "Was ist dreizehn minus sechs?",
+    options: ["fünf", "sechs", "sieben", "acht"],
+    answer: "sieben",
+    category: "Forest-German"
+  }
+];

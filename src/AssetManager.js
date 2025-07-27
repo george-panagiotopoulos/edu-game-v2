@@ -33,7 +33,9 @@ export const TILE_ASSETS = {
   dirt: 'medievalTile_13.png',          // Dirt tile 13
   dirt2: 'medievalTile_14.png',         // Dirt tile 14
   fire: 'fire_tile.jpg',                // Fire tile for volcano
-  volcano_entrance: 'medievalStructure_13.png' // Using same asset as dungeon entrance for now
+  volcano_entrance: 'medievalStructure_13.png', // Using same asset as dungeon entrance for now
+  forest_entrance: 'medievalStructure_13.png', // Using same asset as dungeon entrance for now
+  shop: 'shop.avif' // Shop asset
 };
 
 // Monster mappings to cute monster set
@@ -56,7 +58,8 @@ export const MONSTER_ASSETS = {
   shadow: 'shadow.png',
   'black imp': 'black imp.png',
   'red imp': 'red imp.png',
-  golem: 'golem.png'
+  golem: 'golem.png',
+  hydra: 'hydra.jpeg'
 };
 
 // Hero asset (armored knight from monster set)
@@ -68,18 +71,24 @@ export const EQUIPMENT_ASSETS = {
   shield: 'shield.jpeg',
   ring: 'ring.png',
   axe: 'axe.png',
-  magicShield: 'magic_shield.png'
+  magicShield: 'magic_shield.png',
+  flamingSword: 'flaming sword.png'
 };
 
 // Item assets
 export const ITEM_ASSETS = {
   potion: 'potion.jpeg',
-  armor: 'armor.png'
+  armor: 'armor.png',
+  shop: 'shop.avif'
 };
 
 // Helper functions to get asset URLs
 export const getTileAsset = (tileType) => {
   const fileName = TILE_ASSETS[tileType] || TILE_ASSETS.grass;
+  // Special case for shop asset which is in the main assets directory
+  if (tileType === 'shop') {
+    return `/assets/${fileName}`;
+  }
   return `/assets/tiles/${fileName}`;
 };
 
@@ -106,5 +115,5 @@ export const getEquipmentAsset = (equipmentType) => {
     console.warn(`Equipment asset not found for: ${equipmentType}`);
     return null;
   }
-  return `/assets/${EQUIPMENT_ASSETS[equipmentType]}`;
+  return `/assets/${encodeURIComponent(EQUIPMENT_ASSETS[equipmentType])}`;
 }; 

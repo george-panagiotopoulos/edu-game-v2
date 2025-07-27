@@ -222,6 +222,9 @@ export function generateMap() {
   // Add dungeon entrance (top right, near trees)
   tiles[2][16] = TILE_TYPES.DUNGEON_ENTRANCE;
   
+  // Add forest entrance (village square at 18,4)
+  tiles[4][18] = TILE_TYPES.FOREST_ENTRANCE;
+  
   return tiles;
 }
 
@@ -240,7 +243,7 @@ export function generatePotions() {
   // 2 potions behind monsters (in areas that require defeating monsters to reach)
   const behindMonsterPositions = [
     { x: 1, y: 4, healAmount: Math.floor(Math.random() * 41) + 30 }, // Behind goblin area
-    { x: 18, y: 4, healAmount: Math.floor(Math.random() * 41) + 30 }  // Behind skeleton area
+    { x: 18, y: 5, healAmount: Math.floor(Math.random() * 41) + 30 }  // Behind skeleton area
   ];
   
   // 4 potions in open spaces (added one more)
