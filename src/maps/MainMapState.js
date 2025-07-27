@@ -1,4 +1,4 @@
-import { TILE_TYPES, TRAP_TYPES, EQUIPMENT_ITEMS, EQUIPMENT_TYPES, MAP_WIDTH, MAP_HEIGHT } from './GameState';
+import { TILE_TYPES, TRAP_TYPES, EQUIPMENT_ITEMS, EQUIPMENT_TYPES, MAP_WIDTH, MAP_HEIGHT } from '../GameState';
 
 // Generate a rich medieval village with varied terrain and structures
 export function generateMap() {

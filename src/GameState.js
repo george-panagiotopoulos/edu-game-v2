@@ -1,8 +1,8 @@
 import { createContext, useContext, useReducer } from 'react';
-import { generateRandomRiddle, generateRandomRiddleForMap } from './RiddleManager';
-import { createMainMapState } from './MainMapState';
-import { createDungeonMapState } from './DungeonMapState';
-import { createVolcanoMapState } from './VolcanoMapState';
+import { generateRandomRiddleForMap } from './RiddleManager';
+import { createMainMapState } from './maps/MainMapState';
+import { createDungeonMapState } from './maps/DungeonMapState';
+import { createVolcanoMapState } from './maps/VolcanoMapState';
 
 // Game constants
 export const TILE_SIZE = 64;
@@ -133,9 +133,9 @@ const initialState = {
   hero: {
     x: 9,
     y: 7,
-    hp: 104, // Set to 104 HP (100 base + 4 permanent bonus)
-    maxHp: 104, // Set max HP to 104
-    permanentHpBonus: 4, // Set permanent HP bonus to 4
+    hp: 105, // Set to 105 HP (100 base + 5 permanent bonus)
+    maxHp: 105, // Set max HP to 105
+    permanentHpBonus: 5, // Set permanent HP bonus to 5
     inventory: [],
     equipment: {
       weapon: null,
@@ -605,6 +605,28 @@ function gameReducer(state, action) {
             showVictoryPopup: true
           }
         };
+      } else if (state.currentMapId === 'volcano' && allMonstersDefeatedOnCurrentMap) {
+        // Apply permanent HP bonus when all volcano monsters are defeated
+        const newPermanentHpBonus = state.hero.permanentHpBonus + 1;
+        const newMaxHp = 100 + newPermanentHpBonus;
+        const newHp = Math.min(state.hero.hp + 1, newMaxHp); // Heal 1 HP and increase max HP
+
+        savePermanentHpBonus(newPermanentHpBonus);
+
+        updatedStateAfterDefeat = {
+          ...updatedStateAfterDefeat,
+          hero: {
+            ...updatedStateAfterDefeat.hero,
+            hp: newHp,
+            maxHp: newMaxHp,
+            permanentHpBonus: newPermanentHpBonus
+          },
+          battle: {
+            ...updatedStateAfterDefeat.battle,
+            battleMessage: `🎉 VOLCANO COMPLETED! You defeated all volcano monsters! +1 permanent HP bonus! (🎉 ΟΛΟΚΛΗΡΩΣΑΤΕ ΤΟ ΗΦΑΙΣΤΕΙΟ! Νικήσατε όλα τα τέρατα του ηφαιστείου! +1 μόνιμο μπόνους HP!)`,
+            showVictoryPopup: true
+          }
+        };
       }
       return updatedStateAfterDefeat;
       
@@ -699,7 +721,6 @@ function gameReducer(state, action) {
           if (weaponEquipped === 'axe' && EQUIPMENT_ITEMS[weaponEquipped].criticalChance) {
             if (Math.random() < EQUIPMENT_ITEMS[weaponEquipped].criticalChance) {
               strongDamage *= 2;
-              criticalStrike = true;
             }
           }
         }
@@ -844,7 +865,7 @@ function gameReducer(state, action) {
       // Check if there's a queued attack
       const hasQueuedAttack = state.battle.attackQueue && state.battle.attackQueue.length > 0;
       
-      const blockMessage = blocked ? ' (BLOCKED by your shield!) (ΑΠΟΚΛΕΙΣΤΗΚΕ από την ασπίδα σας!)' : '';
+
       const damageMessage = blocked ? 
         `The ${state.battle.currentMonster.type} attacks but you block it with your shield! (Το ${state.battle.currentMonster.type} επιτίθεται αλλά το αποκλείετε με την ασπίδα σας!)` :
         `The ${state.battle.currentMonster.type} attacks you for ${monsterAttackDamage} damage! (Το ${state.battle.currentMonster.type} σας επιτίθεται για ${monsterAttackDamage} ζημιά!)`;
@@ -1228,13 +1249,21 @@ const GameContext = createContext();
 export function GameProvider({ children }) {
   // Load permanent HP bonus from localStorage and create initial state
   const savedPermanentBonus = loadPermanentHpBonus();
+  // Ensure minimum of 5 permanent HP bonus since the player has already completed 5 stages
+  const effectivePermanentBonus = Math.max(savedPermanentBonus, 5);
+  
+  // Update localStorage if the saved value was lower than 5
+  if (savedPermanentBonus < 5) {
+    savePermanentHpBonus(effectivePermanentBonus);
+  }
+  
   const initialGameState = {
     ...initialState,
     hero: {
       ...initialState.hero,
-      permanentHpBonus: savedPermanentBonus,
-      maxHp: 100 + savedPermanentBonus,
-      hp: 100 + savedPermanentBonus
+      permanentHpBonus: effectivePermanentBonus,
+      maxHp: 100 + effectivePermanentBonus,
+      hp: 100 + effectivePermanentBonus
     }
   };
   
