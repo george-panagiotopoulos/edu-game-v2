@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
-import { useGame, EQUIPMENT_ITEMS, EQUIPMENT_TYPES } from './GameState';
+import { useGame, EQUIPMENT_ITEMS } from './GameState';
+import { EQUIPMENT_TYPES } from './constants';
+import { getItemAsset } from './AssetManager';
 
 function HUD() {
   const { state, dispatch } = useGame();
@@ -15,7 +17,7 @@ function HUD() {
   useEffect(() => {
     if (battle.battleMessage && battle.battleMessage.includes('healing potion')) {
       const timer = setTimeout(() => {
-        dispatch({ type: 'CLEAR_POTION_MESSAGE' });
+        dispatch({ type: 'CLEAR_BATTLE_MESSAGE' });
       }, 3000);
       return () => clearTimeout(timer);
     }
@@ -25,11 +27,49 @@ function HUD() {
   useEffect(() => {
     if (battle.battleMessage && (battle.battleMessage.includes('trap') || battle.battleMessage.includes('παγίδα'))) {
       const timer = setTimeout(() => {
-        dispatch({ type: 'CLEAR_POTION_MESSAGE' });
+        dispatch({ type: 'CLEAR_BATTLE_MESSAGE' });
       }, 4000);
       return () => clearTimeout(timer);
     }
   }, [battle.battleMessage, dispatch]);
+
+  // Clear shop message after 4 seconds
+  useEffect(() => {
+    if (battle.battleMessage && battle.battleMessage.includes('Shop is closed')) {
+      console.log('Shop message detected in HUD:', battle.battleMessage);
+      const timer = setTimeout(() => {
+        console.log('Clearing shop message');
+        dispatch({ type: 'CLEAR_BATTLE_MESSAGE' });
+      }, 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [battle.battleMessage, dispatch]);
+
+  // Clear road sign messages after 10 seconds
+  useEffect(() => {
+    if (battle.battleMessage && (
+      battle.battleMessage.includes('Dangerous area') || 
+      battle.battleMessage.includes('Treasure Island') || 
+      battle.battleMessage.includes('Dangerous island') || 
+      battle.battleMessage.includes('Back to the village') ||
+      battle.battleMessage.includes('Επικίνδυνη περιοχή') ||
+      battle.battleMessage.includes('Νησί Θησαυρού') ||
+      battle.battleMessage.includes('Επικίνδυνο νησί') ||
+      battle.battleMessage.includes('Επιστροφή στο χωριό')
+    )) {
+      console.log('Road sign message detected in HUD:', battle.battleMessage);
+      const timer = setTimeout(() => {
+        console.log('Clearing road sign message');
+        dispatch({ type: 'CLEAR_ROAD_SIGN_MESSAGE' });
+      }, 10000);
+      return () => clearTimeout(timer);
+    }
+  }, [battle.battleMessage, dispatch]);
+  
+  // Log battle message for debugging
+  useEffect(() => {
+    console.log('Current battle message:', battle.battleMessage);
+  }, [battle.battleMessage]);
 
   const aliveMonsters = monsters.filter(m => !m.isDefeated).length;
   const totalMonsters = monsters.length;
@@ -81,12 +121,20 @@ function HUD() {
         <div className="position">
           Position: (Θέση:) ({hero.x}, {hero.y})
         </div>
+        <div className="gold">
+          Gold: (Χρυσός:) {hero.gold || 0} 💰
+        </div>
         <div className="current-map">
-          Current Area: (Τρέχουσα Περιοχή:) {
-            currentMapId === 'main' ? 'Village (Χωριό)' : 
-            currentMapId === 'dungeon' ? 'Dungeon (Μπουντρούμι)' :
-            currentMapId === 'volcano' ? 'Volcano (Ηφαίστειο)' : 'Unknown'
-          }
+          <strong>Current Area: (Τρέχουσα Περιοχή:)</strong><br/>
+          {currentMapId === 'main' ? 'Village (Χωριό)' :
+           currentMapId === 'dungeon' ? 'Dungeon (Μπουντρούμι)' :
+           currentMapId === 'dungeonLevel2' ? 'Dungeon Level 2 (Μπουντρούμι Επίπεδο 2)' :
+           currentMapId === 'volcano' ? 'Volcano (Ηφαίστειο)' :
+           currentMapId === 'forest' ? 'Forest (Δάσος)' :
+           currentMapId === 'crossroads' ? 'Crossroads (Διασταυρώσεις)' :
+           currentMapId === 'treasureIsland' ? 'Treasure Island (Νησί Θησαυρού)' :
+           currentMapId === 'trollCastle' ? 'Troll Castle (Κάστρο Τρολ)' :
+           'Unknown (Άγνωστο)'}
         </div>
       </div>
 
@@ -115,12 +163,12 @@ function HUD() {
             }
           </div>
           <div className="equipment-slot armor-slot" title={hero.equipment.armor ? 
-            `${hero.equipment.armor.name} (-${hero.equipment.armor.defense} damage reduction)` :
+            `${EQUIPMENT_ITEMS[hero.equipment.armor]?.name} (-${EQUIPMENT_ITEMS[hero.equipment.armor]?.defense} damage reduction)` :
             'No armor equipped'
           }>
             <strong>Armor: (Θωράκιση:)</strong><br/>
             {hero.equipment.armor ? 
-              `${hero.equipment.armor.name} (-${hero.equipment.armor.defense} damage reduction)` :
+              `${EQUIPMENT_ITEMS[hero.equipment.armor]?.name} (-${EQUIPMENT_ITEMS[hero.equipment.armor]?.defense} damage reduction${EQUIPMENT_ITEMS[hero.equipment.armor]?.fireImmune ? ', Fire Immune' : ''})` :
               'None (Κανένα)'
             }
           </div>
@@ -201,16 +249,24 @@ function HUD() {
             {hero.bag.armor.length > 0 && (
               <div className="bag-category">
                 <strong>Armor: (Θωράκιση:)</strong>
-                {hero.bag.armor.map((itemType, index) => (
-                  <div 
-                    key={`armor-${index}`}
-                    className="bag-item clickable"
-                    onClick={() => dispatch({ type: 'EQUIP_FROM_BAG', payload: { slot: 'armor', itemType } })}
-                    title={`Click to equip ${itemType.name}`}
-                  >
-                    {itemType.name}
-                  </div>
-                ))}
+                {hero.bag.armor.map((itemType, index) => {
+                  // Add safety check for equipment items
+                  const equipmentItem = EQUIPMENT_ITEMS[itemType];
+                  if (!equipmentItem) {
+                    console.warn(`Equipment item not found for: ${itemType}`);
+                    return null;
+                  }
+                  return (
+                    <div 
+                      key={`armor-${index}`}
+                      className="bag-item clickable"
+                      onClick={() => dispatch({ type: 'EQUIP_FROM_BAG', payload: { slot: 'armor', itemType } })}
+                      title={`Click to equip ${equipmentItem.name}`}
+                    >
+                      {equipmentItem.name}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -223,31 +279,76 @@ function HUD() {
           Monsters: (Τέρατα:) {aliveMonsters}/{totalMonsters} {
             currentMapId === 'main' ? '(17 total)' : 
             currentMapId === 'dungeon' ? '(12 total)' :
-            currentMapId === 'volcano' ? '(15 total)' : '(unknown)'
+            currentMapId === 'dungeonLevel2' ? '(10 total)' :
+            currentMapId === 'volcano' ? '(15 total)' :
+            currentMapId === 'crossroads' ? '(10 total)' : '(unknown)'
           } {
             currentMapId === 'main' ? '(17 συνολικά)' : 
             currentMapId === 'dungeon' ? '(12 συνολικά)' :
-            currentMapId === 'volcano' ? '(15 συνολικά)' : '(άγνωστο)'
+            currentMapId === 'dungeonLevel2' ? '(10 συνολικά)' :
+            currentMapId === 'volcano' ? '(15 συνολικά)' :
+            currentMapId === 'crossroads' ? '(10 συνολικά)' : '(άγνωστο)'
           }
         </div>
+        
+        {/* Poison Status */}
+        {hero.isPoisoned && (
+          <div className="poison-status">
+            <span className="poison-icon">☠️</span>
+            <span className="poison-text">Poisoned (Δηλητηριασμένος)</span>
+          </div>
+        )}
+        
         {currentMapId === 'main' && (
           <div className="potions-remaining">
-            Potions: (Φίλτρα:) {currentMap.items.filter(item => item.type === 'potion' && !item.isCollected).length}/6 remaining (απομένουν)
+            Potions: (Φίλτρα:) {currentMap.items.filter(item => item.type === 'healingPotion' && !item.isCollected).length}/6 remaining (απομένουν)
           </div>
         )}
         {currentMapId === 'dungeon' && (
           <div className="potions-remaining">
-            Potions: (Φίλτρα:) {currentMap.items.filter(item => item.type === 'potion' && !item.isCollected).length}/4 remaining (απομένουν)
+            Potions: (Φίλτρα:) {currentMap.items.filter(item => item.type === 'healingPotion' && !item.isCollected).length}/4 remaining (απομένουν)
+          </div>
+        )}
+        {currentMapId === 'dungeonLevel2' && (
+          <div className="potions-remaining">
+            Potions: (Φίλτρα:) {currentMap.items.filter(item => item.type === 'healingPotion' && !item.isCollected).length}/4 remaining (απομένουν)
           </div>
         )}
         {currentMapId === 'volcano' && (
           <div className="potions-remaining">
-            Potions: (Φίλτρα:) {currentMap.items.filter(item => item.type === 'potion' && !item.isCollected).length}/5 remaining (απομένουν)
+            Potions: (Φίλτρα:) {currentMap.items.filter(item => item.type === 'healingPotion' && !item.isCollected).length}/5 remaining (απομένουν)
+          </div>
+        )}
+        {currentMapId === 'crossroads' && (
+          <div className="potions-remaining">
+            Potions: (Φίλτρα:) {currentMap.items.filter(item => item.type === 'healingPotion' && !item.isCollected).length}/4 remaining (απομένουν)
           </div>
         )}
         <div className="inventory">
           Inventory: (Αποθήκη:) {hero.inventory.length} items (αντικείμενα)
         </div>
+        
+        {/* Portable Items Section */}
+        {hero.portableItems && hero.portableItems.length > 0 && (
+          <div className="portable-items">
+            <strong>Portable Items: (Φορητά Αντικείμενα:)</strong>
+            {hero.portableItems.map((item, index) => (
+              <div 
+                key={`portable-${index}`}
+                className="portable-item clickable"
+                title={`${item.name} (+${item.healAmount} HP) - Use during battle`}
+                style={{
+                  backgroundImage: `url(${getItemAsset(item.type)})`,
+                  backgroundSize: 'contain',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat'
+                }}
+              >
+                {item.name} (+{item.healAmount} HP)
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
 
@@ -273,6 +374,31 @@ function HUD() {
         <div className="trap-message">
           <div className="trap-icon">💥</div>
           <div className="trap-text">{battle.battleMessage}</div>
+        </div>
+      )}
+      
+      {/* Shop message */}
+      {battle.battleMessage && battle.battleMessage.includes('Shop is closed') && (
+        <div className="shop-message">
+          <div className="shop-icon">🏪</div>
+          <div className="shop-text">{battle.battleMessage}</div>
+        </div>
+      )}
+      
+      {/* Road sign message */}
+      {battle.battleMessage && (
+        battle.battleMessage.includes('Dangerous area') || 
+        battle.battleMessage.includes('Treasure Island') || 
+        battle.battleMessage.includes('Dangerous island') || 
+        battle.battleMessage.includes('Back to the village') ||
+        battle.battleMessage.includes('Επικίνδυνη περιοχή') ||
+        battle.battleMessage.includes('Νησί Θησαυρού') ||
+        battle.battleMessage.includes('Επικίνδυνο νησί') ||
+        battle.battleMessage.includes('Επιστροφή στο χωριό')
+      ) && (
+        <div className="road-sign-message">
+          <div className="road-sign-icon">🛣️</div>
+          <div className="road-sign-text">{battle.battleMessage}</div>
         </div>
       )}
     </div>

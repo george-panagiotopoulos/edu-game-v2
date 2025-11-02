@@ -35,7 +35,12 @@ export const TILE_ASSETS = {
   fire: 'fire_tile.jpg',                // Fire tile for volcano
   volcano_entrance: 'medievalStructure_13.png', // Using same asset as dungeon entrance for now
   forest_entrance: 'medievalStructure_13.png', // Using same asset as dungeon entrance for now
-  shop: 'shop.avif' // Shop asset
+  village_entrance: 'medievalStructure_13.png', // Using same asset as dungeon entrance for now
+  shop: 'shop.avif',
+  boat: 'boat.jpg',
+  troll_castle_entrance: 'medievalStructure_13.png', // Using same asset as dungeon entrance for now
+  crossroads_entrance: 'medievalStructure_13.png', // Using same asset as dungeon entrance for now
+  dangerous_area_entrance: 'medievalStructure_13.png' // Use same entrance marker as other transitions
 };
 
 // Monster mappings to cute monster set
@@ -46,12 +51,15 @@ export const MONSTER_ASSETS = {
   'skeleton mage': 'skeleton mage.png',
   'skeleton rogue': 'skeleton rogue.png',
   spider: 'spider.png',
+  'large spider': 'spider.png', // Uses same asset as regular spider but 2x2 size
   wolf: 'wolf.png',
+  'large wolf': 'wolf.png', // Uses same asset as regular wolf but 2x2 size
   dragon: 'dragon.png',
   bat: 'bat.png',
   slime: 'slime.png',
   snake: 'snake.png',
   troll: 'troll.png',
+  'Troll Chieftain': 'troll.png', // Troll Chieftain uses same asset as regular troll but 3x3 size
   ghost: 'spirit.png',
   banshee: 'banshee.png',
   crab: 'crab.png',
@@ -59,7 +67,11 @@ export const MONSTER_ASSETS = {
   'black imp': 'black imp.png',
   'red imp': 'red imp.png',
   golem: 'golem.png',
-  hydra: 'hydra.jpeg'
+  hydra: 'hydra.jpeg',
+  guardian: 'golem.png', // Treasure guardian uses golem asset
+  pirate: 'pirate.png',
+  pirate_captain: 'pirate_captain.png',
+  witch: 'witch.png'
 };
 
 // Hero asset (armored knight from monster set)
@@ -72,14 +84,25 @@ export const EQUIPMENT_ASSETS = {
   ring: 'ring.png',
   axe: 'axe.png',
   magicShield: 'magic_shield.png',
-  flamingSword: 'flaming sword.png'
+  flamingSword: 'flaming sword.png',
+  redArmor: 'red armor.jpg',
+  armor: 'armor.png', // Add this line for the generic armor
+  dungeonArmor: 'armor.png', // Add this line for dungeon armor
+  spear: 'spear.png' // Add spear weapon
 };
 
 // Item assets
 export const ITEM_ASSETS = {
-  potion: 'potion.jpeg',
+  healingPotion: 'potion.jpeg',
+  portablePotion: 'portable potion.png',
   armor: 'armor.png',
-  shop: 'shop.avif'
+  redArmor: 'red armor.jpg',
+  gold: 'goldpile.png',
+  boat: 'boat.jpg',
+  roadSign: 'road sign.png',
+  book: 'book.jpg',
+  freezingBomb: 'frozenbomb.png',
+  treasure: 'goldpile.png' // Treasure chest uses gold pile asset
 };
 
 // Helper functions to get asset URLs
@@ -93,17 +116,41 @@ export const getTileAsset = (tileType) => {
 };
 
 export const getItemAsset = (itemType) => {
-  const fileName = ITEM_ASSETS[itemType] || ITEM_ASSETS.potion;
-  // Armor is in the monsters folder, others are in assets root
+  const fileName = ITEM_ASSETS[itemType] || ITEM_ASSETS.healingPotion;
+  console.log(`getItemAsset called for ${itemType}, fileName: ${fileName}`);
+  // Regular armor is in the monsters folder, redArmor is in assets root
   if (itemType === 'armor') {
-    return `/assets/monsters/${fileName}`;
+    const path = `/assets/monsters/${encodeURIComponent(fileName)}`;
+    console.log(`Returning armor path: ${path}`);
+    return path;
   }
-  return `/assets/${fileName}`;
+  if (itemType === 'redArmor') {
+    const path = `/assets/${encodeURIComponent(fileName)}`;
+    console.log(`Returning redArmor path: ${path}`);
+    return path;
+  }
+  if (itemType === 'roadSign') {
+    const path = `/assets/${encodeURIComponent(fileName)}`;
+    console.log(`Returning roadSign path: ${path}`);
+    return path;
+  }
+  const path = `/assets/${encodeURIComponent(fileName)}`;
+  console.log(`Returning regular path: ${path}`);
+  return path;
 };
 
 export const getMonsterAsset = (monsterType) => {
   const fileName = MONSTER_ASSETS[monsterType] || MONSTER_ASSETS.goblin;
-  return `/assets/monsters/${encodeURIComponent(fileName)}`;
+  console.log(`getMonsterAsset called for: ${monsterType}, fileName: ${fileName}`);
+  // Special-case monsters whose assets live in the root assets folder
+  if (monsterType === 'witch') {
+    const rootPath = `/assets/${encodeURIComponent(fileName)}`;
+    console.log(`Returning monster path (root assets): ${rootPath}`);
+    return rootPath;
+  }
+  const path = `/assets/monsters/${encodeURIComponent(fileName)}`;
+  console.log(`Returning monster path: ${path}`);
+  return path;
 };
 
 export const getHeroAsset = () => {
@@ -111,9 +158,20 @@ export const getHeroAsset = () => {
 };
 
 export const getEquipmentAsset = (equipmentType) => {
+  console.log(`getEquipmentAsset called for: ${equipmentType}`);
   if (!EQUIPMENT_ASSETS[equipmentType]) {
     console.warn(`Equipment asset not found for: ${equipmentType}`);
     return null;
   }
-  return `/assets/${encodeURIComponent(EQUIPMENT_ASSETS[equipmentType])}`;
+  console.log(`Equipment asset file: ${EQUIPMENT_ASSETS[equipmentType]}`);
+  
+  // Generic armor and dungeon armor are in the monsters folder, redArmor is in assets root, others are in assets root
+  if (equipmentType === 'armor' || equipmentType === 'dungeonArmor') {
+    const path = `/assets/monsters/${encodeURIComponent(EQUIPMENT_ASSETS[equipmentType])}`;
+    console.log(`Returning ${equipmentType} path: ${path}`);
+    return path;
+  }
+  const path = `/assets/${encodeURIComponent(EQUIPMENT_ASSETS[equipmentType])}`;
+  console.log(`Returning equipment path: ${path}`);
+  return path;
 }; 

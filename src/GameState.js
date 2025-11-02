@@ -2,65 +2,16 @@ import { createContext, useContext, useReducer } from 'react';
 import { generateRandomRiddleForMap } from './RiddleManager';
 import { createMainMapState } from './maps/MainMapState';
 import { createDungeonMapState } from './maps/DungeonMapState';
+import { createDungeonLevel2MapState } from './maps/DungeonLevel2MapState';
 import { createVolcanoMapState } from './maps/VolcanoMapState';
 import { createForestMapState } from './maps/ForestMapState';
-
-// Game constants
-export const TILE_SIZE = 64;
-export const MAP_WIDTH = 20;
-export const MAP_HEIGHT = 15;
-
-// Tile types
-export const TILE_TYPES = {
-  GRASS: 'grass',
-  GRASS2: 'grass2',
-  STONE: 'stone',
-  STONE2: 'stone2',
-  WATER: 'water',
-  WATER2: 'water2',
-  WALL: 'wall',
-  TREE: 'tree',
-  TREE2: 'tree2',
-  TREE3: 'tree3',
-  TREE4: 'tree4',
-  TREE5: 'tree5',
-  PATH: 'path',
-  ROAD: 'road',
-  CROSSROAD: 'crossroad',
-  HOUSE1: 'house1',
-  HOUSE2: 'house2',
-  HOUSE3: 'house3',
-  HOUSE4: 'house4',
-  HOUSE5: 'house5',
-  WINDMILL: 'windmill',
-  CASTLE: 'castle',
-  BRIDGE: 'bridge',
-  ROCKS: 'rocks',
-  FLOWERS: 'flowers',
-  POTION: 'potion',
-  DUNGEON_ENTRANCE: 'dungeon_entrance', // New tile type for dungeon entrance
-  DUNGEON_FLOOR: 'dungeon_floor', // New tile type for dungeon floor
-  DUNGEON_WALL: 'dungeon_wall', // New tile type for dungeon walls
-  DIRT: 'dirt', // New tile type for dirt
-  DIRT2: 'dirt2', // New tile type for dirt variation
-  FIRE: 'fire', // New tile type for volcano fire
-  VOLCANO_ENTRANCE: 'volcano_entrance', // New tile type for volcano entrance
-  FOREST_ENTRANCE: 'forest_entrance', // New tile type for forest entrance
-  SHOP: 'shop' // New tile type for shop
-};
-
-// Trap types
-export const TRAP_TYPES = {
-  DAMAGE: 'damage',
-  TELEPORT: 'teleport'
-};
+import { createCrossroadsMapState } from './maps/CrossroadsMapState';
+import { createTreasureIslandMapState } from './maps/TreasureIslandMapState';
+import { createTrollCastleMapState } from './maps/TrollCastleMapState';
+import { createDangerousAreaMapState } from './maps/DangerousAreaMapState';
+import { TILE_SIZE, MAP_WIDTH, MAP_HEIGHT, TILE_TYPES, TRAP_TYPES, EQUIPMENT_TYPES } from './constants';
 
 // Equipment definitions (parametrical system for future expansion)
-export const EQUIPMENT_TYPES = {
-  WEAPON: 'weapon',
-  ARMOR: 'armor'
-};
-
 export const EQUIPMENT_ITEMS = {
   sword: {
     name: 'Iron Sword',
@@ -70,13 +21,13 @@ export const EQUIPMENT_ITEMS = {
   },
   shield: {
     name: 'Knight Shield',
-    type: 'shield', // Use 'shield' as the type instead of EQUIPMENT_TYPES.ARMOR
+    type: EQUIPMENT_TYPES.SHIELD, // Use EQUIPMENT_TYPES.SHIELD as the type
     blockChance: 0.25, // 25% chance to block
     asset: 'shield.jpeg'
   },
   ring: {
     name: 'Ring of Knowledge',
-    type: 'ring',
+    type: EQUIPMENT_TYPES.ACCESSORY,
     charges: 3,
     asset: 'ring.png'
   },
@@ -89,9 +40,9 @@ export const EQUIPMENT_ITEMS = {
   },
   magicShield: {
     name: 'Magic Shield',
-    type: 'shield',
+    type: EQUIPMENT_TYPES.SHIELD,
     blockChance: 0.25, // 25% chance to block, increases to 40% when HP < 40
-    asset: 'magicShield.png'
+    asset: 'magic_shield.png'
   },
   flamingSword: {
     name: 'Flaming Sword',
@@ -100,6 +51,32 @@ export const EQUIPMENT_ITEMS = {
     criticalChance: 0.20, // 20% chance of critical strike
     fireEffect: true, // sets target on fire
     asset: 'flaming sword.png'
+  },
+  redArmor: {
+    name: 'Red Armor',
+    type: EQUIPMENT_TYPES.ARMOR,
+    defense: 4, // -4 damage reduction
+    fireImmune: true, // Immune to fire damage
+    asset: 'red armor.jpg'
+  },
+  dungeonArmor: {
+    name: 'Dungeon Armor',
+    type: EQUIPMENT_TYPES.ARMOR,
+    defense: 2, // -2 damage reduction
+    asset: 'armor.png'
+  },
+  armor: {
+    name: 'Knight Armor',
+    type: EQUIPMENT_TYPES.ARMOR,
+    defense: 2,
+    asset: 'armor.png'
+  },
+  spear: {
+    name: 'Ice Spear',
+    type: EQUIPMENT_TYPES.WEAPON,
+    damageBonus: 7, // adds 7 damage
+    freezeChance: 0.25, // 25% chance to freeze opponent
+    asset: 'spear.png'
   }
 };
 
@@ -148,6 +125,8 @@ const initialState = {
     maxHp: 105, // Set max HP to 105
     permanentHpBonus: 5, // Set permanent HP bonus to 5
     inventory: [],
+    portableItems: [], // New: portable items that can be used during battle
+    gold: 0, // New: gold currency
     equipment: {
       weapon: null,
       shield: null,
@@ -157,18 +136,26 @@ const initialState = {
     bag: {
       weapon: [],
       shield: [],
-      armor: []
+      armor: [],
+      ring: []
     },
     ringCharges: 0, // Simple counter for ring charges
     onFire: false, // New: fire effect state
-    fireDamage: 0 // New: fire damage counter
+    fireDamage: 0, // New: fire damage counter
+    isPoisoned: false, // New: poison effect state
+    poisonDamage: 0 // New: poison damage counter
   },
   currentMapId: 'main', // New: Track current map
   maps: { // New: Store multiple maps
     main: createMainMapState(),
     dungeon: createDungeonMapState(),
+    dungeonLevel2: createDungeonLevel2MapState(),
     volcano: createVolcanoMapState(),
-    forest: createForestMapState()
+    forest: createForestMapState(),
+    crossroads: createCrossroadsMapState(),
+    treasureIsland: createTreasureIslandMapState(),
+    trollCastle: createTrollCastleMapState(),
+    dangerousArea: createDangerousAreaMapState()
   },
   battle: {
     isActive: false,
@@ -182,13 +169,29 @@ const initialState = {
     monsterAttacking: false,
     heroAttacking: false,
     attackQueue: [],
-    showVictoryPopup: false
+    showVictoryPopup: false,
+    heroFrozen: false, // New: Hero frozen condition
+    monsterFrozen: false, // New: Monster frozen condition
+    monsterFrozenTurns: 0 // New: Remaining turns monster is frozen
+  },
+  shop: {
+    isOpen: false
+  },
+  book: {
+    isOpen: false,
+    bookType: null
   }
 };
 
 // Game state reducer
 function gameReducer(state, action) {
   const currentMap = state.maps ? state.maps[state.currentMapId] : null;
+  
+  // Safety check to ensure currentMap exists
+  if (!currentMap && action.type !== 'RESET_PROGRESS') {
+    console.error('Current map not found:', state.currentMapId, 'Available maps:', Object.keys(state.maps || {}));
+    return state;
+  }
   
   switch (action.type) {
     case 'MOVE_HERO':
@@ -197,6 +200,12 @@ function gameReducer(state, action) {
       const { x, y } = action.payload;
       const newX = Math.max(0, Math.min(currentMap.width - 1, state.hero.x + x));
       const newY = Math.max(0, Math.min(currentMap.height - 1, state.hero.y + y));
+      
+      // Safety check to ensure tiles exist
+      if (!currentMap.tiles || !currentMap.tiles[newY] || !currentMap.tiles[newY][newX]) {
+        console.error('Tiles not properly initialized for map:', state.currentMapId, 'at position:', newX, newY);
+        return state;
+      }
       
       // Check if the new position is walkable
       const tileType = currentMap.tiles[newY][newX];
@@ -230,8 +239,20 @@ function gameReducer(state, action) {
           newMapId = 'dungeon';
           // Keep hero at the same coordinates in the new map
         } else if (state.currentMapId === 'dungeon') {
-          newMapId = 'main';
-          // Keep hero at the same coordinates in the new map
+          // Check if this is the entrance to dungeon level 2 (at position 17,13)
+          if (newX === 17 && newY === 13) {
+            newMapId = 'dungeonLevel2';
+            // Keep hero at the same coordinates in the new map
+          } else {
+            newMapId = 'main';
+            // Keep hero at the same coordinates in the new map
+          }
+        } else if (state.currentMapId === 'dungeonLevel2') {
+          // Exit from dungeon level 2 back to dungeon (at position 18,1)
+          if (newX === 18 && newY === 1) {
+            newMapId = 'dungeon';
+            // Keep hero at the same coordinates in the new map
+          }
         }
 
         return {
@@ -324,7 +345,191 @@ function gameReducer(state, action) {
         };
       }
 
+      // Handle village entrance/exit (for Crossroads transitions)
+      if (tileType === TILE_TYPES.VILLAGE_ENTRANCE) {
+        let newMapId = '';
+        let newHeroX = newX;
+        let newHeroY = newY;
 
+        if (state.currentMapId === 'main') {
+          newMapId = 'crossroads';
+          // Hero enters Crossroads at position (17,11) as specified
+          newHeroX = 17;
+          newHeroY = 11;
+        } else if (state.currentMapId === 'crossroads') {
+          newMapId = 'main';
+          // Hero returns to Village at position (2,9) as specified
+          newHeroX = 2;
+          newHeroY = 9;
+        }
+
+        return {
+          ...state,
+          hero: {
+            ...state.hero,
+            x: newHeroX,
+            y: newHeroY,
+          },
+          currentMapId: newMapId,
+          battle: { // Clear any battle state when changing maps
+            ...state.battle,
+            isActive: false,
+            currentMonster: null,
+            battleQueue: [],
+            currentRiddle: null,
+            battleMessage: '',
+            awaitingRiddleAnswer: false,
+          }
+        };
+      }
+
+      // Handle Dangerous Area entrance/exit
+      if (tileType === TILE_TYPES.DANGEROUS_AREA_ENTRANCE) {
+        let newMapId = '';
+        let newHeroX = newX;
+        let newHeroY = newY;
+
+        if (state.currentMapId === 'crossroads') {
+          newMapId = 'dangerousArea';
+          // Enter at a safe location
+          newHeroX = 16;
+          newHeroY = 11;
+        } else if (state.currentMapId === 'dangerousArea') {
+          newMapId = 'crossroads';
+          // Return near the sign area
+          newHeroX = 8; // tile used for entrance in crossroads top row
+          newHeroY = 0;
+        }
+
+        return {
+          ...state,
+          hero: {
+            ...state.hero,
+            x: newHeroX,
+            y: newHeroY,
+          },
+          currentMapId: newMapId,
+          battle: { // Clear any battle state when changing maps
+            ...state.battle,
+            isActive: false,
+            currentMonster: null,
+            battleQueue: [],
+            currentRiddle: null,
+            battleMessage: '',
+            awaitingRiddleAnswer: false,
+          }
+        };
+      }
+
+      // Handle troll castle entrance/exit
+      if (tileType === TILE_TYPES.TROLL_CASTLE_ENTRANCE) {
+        let newMapId = '';
+        let newHeroX = newX;
+        let newHeroY = newY;
+
+        if (state.currentMapId === 'crossroads') {
+          // From Crossroads to Troll Castle
+          newMapId = 'trollCastle';
+          // Hero will start at (1,1) in Troll Castle
+          newHeroX = 0; // 1 in 1-based = 0 in 0-based
+          newHeroY = 0; // 1 in 1-based = 0 in 0-based
+        }
+
+        return {
+          ...state,
+          hero: {
+            ...state.hero,
+            x: newHeroX,
+            y: newHeroY,
+          },
+          currentMapId: newMapId,
+          battle: { // Clear any battle state when changing maps
+            ...state.battle,
+            isActive: false,
+            currentMonster: null,
+            battleQueue: [],
+            currentRiddle: null,
+            battleMessage: '',
+            awaitingRiddleAnswer: false,
+          }
+        };
+      }
+
+      // Handle crossroads entrance/exit
+      if (tileType === TILE_TYPES.CROSSROADS_ENTRANCE) {
+        let newMapId = '';
+        let newHeroX = newX;
+        let newHeroY = newY;
+
+        if (state.currentMapId === 'trollCastle') {
+          // From Troll Castle back to Crossroads
+          newMapId = 'crossroads';
+          // Hero will start at (8,13) in Crossroads
+          newHeroX = 7; // 8 in 1-based = 7 in 0-based
+          newHeroY = 12; // 13 in 1-based = 12 in 0-based
+        }
+
+        return {
+          ...state,
+          hero: {
+            ...state.hero,
+            x: newHeroX,
+            y: newHeroY,
+          },
+          currentMapId: newMapId,
+          battle: { // Clear any battle state when changing maps
+            ...state.battle,
+            isActive: false,
+            currentMonster: null,
+            battleQueue: [],
+            currentRiddle: null,
+            battleMessage: '',
+            awaitingRiddleAnswer: false,
+          }
+        };
+      }
+
+      // Handle boat transitions
+      if (tileType === TILE_TYPES.BOAT) {
+        let newMapId = '';
+        let newHeroX = newX;
+        let newHeroY = newY;
+
+        if (state.currentMapId === 'crossroads') {
+          // From Crossroads to Treasure Island
+          newMapId = 'treasureIsland';
+          // Hero will start at (15,4) in Treasure Island
+          newHeroX = 14; // 15 in 1-based = 14 in 0-based
+          newHeroY = 3;  // 4 in 1-based = 3 in 0-based
+        } else if (state.currentMapId === 'treasureIsland') {
+          // From Treasure Island back to Crossroads
+          newMapId = 'crossroads';
+          // Hero will start at (8,3) in Crossroads
+          newHeroX = 7; // 8 in 1-based = 7 in 0-based
+          newHeroY = 2; // 3 in 1-based = 2 in 0-based
+        }
+
+        if (newMapId) {
+          return {
+            ...state,
+            hero: {
+              ...state.hero,
+              x: newHeroX,
+              y: newHeroY,
+            },
+            currentMapId: newMapId,
+            battle: { // Clear any battle state when changing maps
+              ...state.battle,
+              isActive: false,
+              currentMonster: null,
+              battleQueue: [],
+              currentRiddle: null,
+              battleMessage: '',
+              awaitingRiddleAnswer: false,
+            }
+          };
+        }
+      }
 
       if (isWalkable) {
         // Check for monsters in proximity from the current map's monsters
@@ -342,11 +547,44 @@ function gameReducer(state, action) {
           
           if (withinMonsterArea) return true;
           
-          // Check proximity distance
-          const distance = Math.max(
-            Math.abs(monster.x - newX),
-            Math.abs(monster.y - newY)
-          );
+          // Check proximity distance - use different logic for 2x2 vs 1x1 monsters
+          let distance;
+          
+          if (monsterSize > 1) {
+            // For 2x2 monsters, check distance from nearest edge
+            let distanceX, distanceY;
+            
+            if (newX < monster.x) {
+              // Hero is to the left of monster
+              distanceX = monster.x - newX;
+            } else if (newX > monsterEndX) {
+              // Hero is to the right of monster
+              distanceX = newX - monsterEndX;
+            } else {
+              // Hero is within monster's X range
+              distanceX = 0;
+            }
+            
+            if (newY < monster.y) {
+              // Hero is above monster
+              distanceY = monster.y - newY;
+            } else if (newY > monsterEndY) {
+              // Hero is below monster
+              distanceY = newY - monsterEndY;
+            } else {
+              // Hero is within monster's Y range
+              distanceY = 0;
+            }
+            
+            // Use the maximum distance (correct for proximity calculation)
+            distance = Math.max(distanceX, distanceY);
+          } else {
+            // For 1x1 monsters, use original logic (distance from center)
+            distance = Math.max(
+              Math.abs(monster.x - newX),
+              Math.abs(monster.y - newY)
+            );
+          }
           
           return distance <= monster.proximity;
         });
@@ -391,8 +629,26 @@ function gameReducer(state, action) {
         
         // Check for potions at the new position
         const potionAtPosition = currentMap.items.find(potion => 
-          potion.type === 'potion' && potion.x === newX && potion.y === newY && !potion.isCollected
+          potion.type === 'healingPotion' && potion.x === newX && potion.y === newY && !potion.isCollected
         );
+        
+        // Check for portable potions at the new position
+        const portablePotionAtPosition = currentMap.items.find(potion => 
+          potion.type === 'portablePotion' && potion.x === newX && potion.y === newY && !potion.isCollected
+        );
+        
+        // Check for gold at adjacent position (within 1 tile)
+        const goldAtPosition = currentMap.items.find(gold => {
+          if (gold.type !== 'gold' || gold.isCollected) return false;
+          
+          // Check if hero is within 1 tile of the gold
+          const distance = Math.max(
+            Math.abs(gold.x - newX),
+            Math.abs(gold.y - newY)
+          );
+          
+          return distance <= 1;
+        });
         
         let updatedHero = {
           ...state.hero,
@@ -410,16 +666,67 @@ function gameReducer(state, action) {
           
           updatedHero = {
             ...updatedHero,
-            hp: newHp
+            hp: newHp,
+            isPoisoned: false, // Clear poison when using healing potion
+            poisonDamage: 0
           };
           
-          updatedItems = currentMap.items.map(item =>
-            item.id === potionAtPosition.id
-              ? { ...item, isCollected: true }
-              : item
-          );
+          // Safety check to ensure currentMap.items exists
+          if (currentMap && currentMap.items) {
+            updatedItems = currentMap.items.map(item =>
+              item.id === potionAtPosition.id
+                ? { ...item, isCollected: true }
+                : item
+            );
+          } else {
+            updatedItems = [];
+          }
           
           healMessage = `You found a healing potion! +${actualHeal} HP (Βρήκατε ένα φίλτρο θεραπείας! +${actualHeal} HP)`;
+        } else if (portablePotionAtPosition) {
+          // Collect the portable potion
+          updatedHero = {
+            ...updatedHero,
+            portableItems: [...state.hero.portableItems, {
+              id: Date.now(),
+              type: 'portablePotion',
+              name: 'Portable Healing Potion',
+              healAmount: 50
+            }],
+            isPoisoned: false, // Clear poison when using portable healing potion
+            poisonDamage: 0
+          };
+          
+          // Safety check to ensure currentMap.items exists
+          if (currentMap && currentMap.items) {
+            updatedItems = currentMap.items.map(item =>
+              item.id === portablePotionAtPosition.id
+                ? { ...item, isCollected: true } : item
+            );
+          } else {
+            updatedItems = [];
+          }
+          
+          healMessage = `You found a portable healing potion! (Βρήκατε ένα φορητό φίλτρο θεραπείας!)`;
+        } else if (goldAtPosition) {
+          // Collect the gold
+          updatedHero = {
+            ...updatedHero,
+            gold: state.hero.gold + goldAtPosition.amount
+          };
+          
+          // Safety check to ensure currentMap.items exists
+          if (currentMap && currentMap.items) {
+            updatedItems = currentMap.items.map(item =>
+              item.id === goldAtPosition.id
+                ? { ...item, isCollected: true }
+                : item
+            );
+          } else {
+            updatedItems = [];
+          }
+          
+          healMessage = `You found ${goldAtPosition.amount} gold! (Βρήκατε ${goldAtPosition.amount} χρυσό!)`;
         }
         
         // Check for armor at the new position
@@ -450,11 +757,16 @@ function gameReducer(state, action) {
           };
           console.log('Updated hero equipment:', updatedHero.equipment);
           
-          updatedItems = currentMap.items.map(item =>
-            item.id === armorAtPosition.id
-              ? { ...item, isCollected: true }
-              : item
-          );
+          // Safety check to ensure currentMap.items exists
+          if (currentMap && currentMap.items) {
+            updatedItems = currentMap.items.map(item =>
+              item.id === armorAtPosition.id
+                ? { ...item, isCollected: true }
+                : item
+            );
+          } else {
+            updatedItems = [];
+          }
           
           healMessage = `You equipped the ${armorAtPosition.name}! Damage reduction: ${armorAtPosition.defense} (Εξοπλιστήκατε με το ${armorAtPosition.name}! Μείωση ζημιάς: ${armorAtPosition.defense})`;
         } else if (equipmentAtPosition) {
@@ -462,7 +774,7 @@ function gameReducer(state, action) {
           const equipmentConfig = EQUIPMENT_ITEMS[equipmentAtPosition.equipmentType];
           
           // RING: Special handling for rings
-          if (equipmentConfig.type === 'ring') {
+          if (equipmentConfig.type === EQUIPMENT_TYPES.ACCESSORY) {
             if (!updatedHero.equipment.ring) {
               // Give ring with 3 charges
               updatedHero = {
@@ -471,11 +783,16 @@ function gameReducer(state, action) {
                 ringCharges: 3
               };
               
-              updatedItems = currentMap.items.map(item =>
-                item.id === equipmentAtPosition.id
-                  ? { ...item, isCollected: true }
-                  : item
-              );
+              // Safety check to ensure currentMap.items exists
+              if (currentMap && currentMap.items) {
+                updatedItems = currentMap.items.map(item =>
+                  item.id === equipmentAtPosition.id
+                    ? { ...item, isCollected: true }
+                    : item
+                );
+              } else {
+                updatedItems = [];
+              }
               
               healMessage = `You equipped the Ring of Knowledge! (3 charges)`;
             }
@@ -489,11 +806,16 @@ function gameReducer(state, action) {
               }
             };
             
-            updatedItems = currentMap.items.map(item =>
-              item.id === equipmentAtPosition.id
-                ? { ...item, isCollected: true }
-                : item
-            );
+            // Safety check to ensure currentMap.items exists
+            if (currentMap && currentMap.items) {
+              updatedItems = currentMap.items.map(item =>
+                item.id === equipmentAtPosition.id
+                  ? { ...item, isCollected: true }
+                  : item
+              );
+            } else {
+              updatedItems = [];
+            }
             
             healMessage = `You equipped the ${equipmentConfig.name}! (Εξοπλιστήκατε με το ${equipmentConfig.name}!)`;
           }
@@ -524,9 +846,13 @@ function gameReducer(state, action) {
           }
           
           // Mark trap as activated
-          updatedTraps = currentMap.traps.map(t =>
-            t.id === trapAtPosition.id ? { ...t, isActivated: true } : t
-          );
+          if (currentMap && currentMap.traps) {
+            updatedTraps = currentMap.traps.map(t =>
+              t.id === trapAtPosition.id ? { ...t, isActivated: true } : t
+            );
+          } else {
+            updatedTraps = [];
+          }
           
           return {
             ...state,
@@ -546,6 +872,18 @@ function gameReducer(state, action) {
           };
         }
         
+        // Handle poison damage during movement
+        let poisonMessage = '';
+        if (updatedHero.isPoisoned) {
+          const poisonDamage = 10;
+          const newHp = Math.max(0, updatedHero.hp - poisonDamage);
+          updatedHero = {
+            ...updatedHero,
+            hp: newHp
+          };
+          poisonMessage = `☠️ You take ${poisonDamage} poison damage! (☠️ Παίρνετε ${poisonDamage} ζημιά από δηλητήριο!)`;
+        }
+        
         return {
           ...state,
           hero: updatedHero,
@@ -558,7 +896,7 @@ function gameReducer(state, action) {
           },
           battle: {
             ...state.battle,
-            battleMessage: healMessage
+            battleMessage: poisonMessage || healMessage
           }
         };
       }
@@ -603,11 +941,14 @@ function gameReducer(state, action) {
       
       const defeatedMonsterId = action.payload.monsterId;
       // Update monsters for the current map
-      const updatedMonsters = currentMap.monsters.map(monster =>
-        monster.id === defeatedMonsterId
-          ? { ...monster, isDefeated: true }
-          : monster
-      );
+      let updatedMonsters = [];
+      if (currentMap && currentMap.monsters) {
+        updatedMonsters = currentMap.monsters.map(monster =>
+          monster.id === defeatedMonsterId
+            ? { ...monster, isDefeated: true }
+            : monster
+        );
+      }
 
       const allMonstersDefeatedOnCurrentMap = updatedMonsters.every(monster => monster.isDefeated);
       let updatedStateAfterDefeat = {
@@ -714,15 +1055,53 @@ function gameReducer(state, action) {
             showVictoryPopup: true
           }
         };
+      } else if (state.currentMapId === 'dungeonLevel2' && allMonstersDefeatedOnCurrentMap) {
+        // Apply permanent HP bonus when all dungeon level 2 monsters are defeated
+        const newPermanentHpBonus = state.hero.permanentHpBonus + 1;
+        const newMaxHp = 100 + newPermanentHpBonus;
+        const newHp = Math.min(state.hero.hp + 1, newMaxHp); // Heal 1 HP and increase max HP
+
+        savePermanentHpBonus(newPermanentHpBonus);
+
+        updatedStateAfterDefeat = {
+          ...updatedStateAfterDefeat,
+          hero: {
+            ...updatedStateAfterDefeat.hero,
+            hp: newHp,
+            maxHp: newMaxHp,
+            permanentHpBonus: newPermanentHpBonus
+          },
+          battle: {
+            ...updatedStateAfterDefeat.battle,
+            battleMessage: `🎉 DUNGEON LEVEL 2 COMPLETED! You defeated all dungeon level 2 monsters! +1 permanent HP bonus! (🎉 ΟΛΟΚΛΗΡΩΣΑΤΕ ΤΟ ΜΠΟΥΝΤΡΟΥΜΙ ΕΠΙΠΕΔΟ 2! Νικήσατε όλα τα τέρατα του μπουντρουμιού επιπέδου 2! +1 μόνιμο μπόνους HP!)`,
+            showVictoryPopup: true
+          }
+        };
       }
       return updatedStateAfterDefeat;
       
     case 'BASIC_ATTACK':
+      // Check if hero is frozen - if so, skip their turn
+      if (state.battle.heroFrozen) {
+        return {
+          ...state,
+          battle: {
+            ...state.battle,
+            heroFrozen: false, // Clear frozen state
+            battleMessage: `You are frozen and miss your turn!`,
+            turn: 'monster',
+            heroAttacking: false,
+            monsterAttacking: false
+          }
+        };
+      }
+      
       // Calculate damage with equipment bonus
       let baseDamage = Math.floor(Math.random() * 6) + 10; // 10-15 damage
       const weaponEquipped = state.hero.equipment.weapon;
       let criticalStrike = false;
       let fireEffect = false;
+      let freezeEffect = false;
       
       if (weaponEquipped && EQUIPMENT_ITEMS[weaponEquipped]) {
         const weaponBonus = Math.floor(Math.random() * EQUIPMENT_ITEMS[weaponEquipped].damageBonus) + 1;
@@ -740,14 +1119,50 @@ function gameReducer(state, action) {
         if (weaponEquipped === 'flamingSword' && EQUIPMENT_ITEMS[weaponEquipped].fireEffect) {
           fireEffect = true;
         }
+        
+        // Check for freeze effect (spear only) per attack chance
+        if (weaponEquipped === 'spear' && EQUIPMENT_ITEMS[weaponEquipped].freezeChance) {
+          if (Math.random() < EQUIPMENT_ITEMS[weaponEquipped].freezeChance) {
+            freezeEffect = true;
+          }
+        }
       }
       
+      // Witch magic shield: blocks every 2nd incoming attack
+      if (state.battle.currentMonster.type === 'witch' && state.battle.currentMonster.hasMagicShieldEverySecond) {
+        const nextShieldCount = (state.battle.currentMonster.magicShieldCounter || 0) + 1;
+        const willBlock = nextShieldCount % 2 === 0;
+        if (willBlock) {
+          const shieldedMonster = {
+            ...state.battle.currentMonster,
+            magicShieldCounter: nextShieldCount
+          };
+          return {
+            ...state,
+            battle: {
+              ...state.battle,
+              currentMonster: shieldedMonster,
+              battleMessage: `Your attack is blocked by the Witch's magic shield! (Η επίθεσή σας αποκλείεται από την μαγική ασπίδα της Μάγισσας!)`,
+              turn: 'monster',
+              heroAttacking: true,
+              monsterAttacking: false
+            }
+          };
+        }
+      }
+
       // Special handling for hydra
       let updatedMonster = {
         ...state.battle.currentMonster,
         hp: Math.max(0, state.battle.currentMonster.hp - baseDamage),
-        onFire: fireEffect ? true : state.battle.currentMonster.onFire || false
+        onFire: fireEffect ? true : state.battle.currentMonster.onFire || false,
+        frozen: freezeEffect ? true : false
       };
+
+      // Increment witch shield counter on non-blocked attacks
+      if (updatedMonster.type === 'witch' && updatedMonster.hasMagicShieldEverySecond) {
+        updatedMonster = { ...updatedMonster, magicShieldCounter: (updatedMonster.magicShieldCounter || 0) + 1 };
+      }
       
       // Hydra head mechanics
       if (updatedMonster.type === 'hydra' && updatedMonster.isBoss) {
@@ -771,6 +1186,15 @@ function gameReducer(state, action) {
         }
       }
       
+      // Witch auto-heal when at or below 50 HP (up to 2 potions)
+      let extraMessage = '';
+      if (updatedMonster.type === 'witch' && (updatedMonster.portablePotions || 0) > 0 && updatedMonster.hp > 0 && updatedMonster.hp <= 50) {
+        const healAmount = 50;
+        const newHp = Math.min(updatedMonster.maxHp, updatedMonster.hp + healAmount);
+        updatedMonster = { ...updatedMonster, hp: newHp, portablePotions: (updatedMonster.portablePotions || 0) - 1 };
+        extraMessage = ` The witch uses a healing potion and restores +${newHp - (updatedMonster.hp - healAmount)} HP! (Η μάγισσα χρησιμοποιεί φίλτρο θεραπείας και ανακτά ζωή!)`;
+      }
+
       if (updatedMonster.hp <= 0) {
         return {
           ...state,
@@ -778,9 +1202,10 @@ function gameReducer(state, action) {
             ...state.maps,
             [state.currentMapId]: {
               ...currentMap,
-              monsters: currentMap.monsters.map(m => 
-                m.id === updatedMonster.id ? { ...m, isDefeated: true } : m
-              )
+              monsters: currentMap && currentMap.monsters ? 
+                currentMap.monsters.map(m => 
+                  m.id === updatedMonster.id ? { ...m, isDefeated: true } : m
+                ) : []
             }
           },
           battle: {
@@ -796,9 +1221,10 @@ function gameReducer(state, action) {
       
       return {
         ...state,
-        battle: {
-          ...state.battle,
-          currentMonster: updatedMonster,
+                  battle: {
+            ...state.battle,
+            currentMonster: updatedMonster,
+            monsterFrozen: freezeEffect, // Set monster frozen state
                       battleMessage: (() => {
             let message = criticalStrike ? 
               `CRITICAL STRIKE! You hit for ${baseDamage} damage! (ΚΡΙΤΙΚΗ ΚΡΟΥΣΗ! Χτυπήσατε για ${baseDamage} ζημιά!)` :
@@ -806,11 +1232,19 @@ function gameReducer(state, action) {
               `You hit for ${baseDamage} damage! (weapon bonus included) (Χτυπήσατε για ${baseDamage} ζημιά! (συμπεριλαμβανομένου του μπόνους όπλου))` : 
               `You hit for ${baseDamage} damage! (Χτυπήσατε για ${baseDamage} ζημιά!)`;
             
+            // Add freeze effect message
+            if (freezeEffect) {
+              message += ` The ${updatedMonster.type} is frozen and will miss its next turn!`;
+            }
+            
             // Add hydra head information
             if (updatedMonster.type === 'hydra' && updatedMonster.isBoss) {
               message += ` Hydra has ${updatedMonster.heads} heads remaining!`;
             }
-            
+            // Add witch potion info if any
+            if (extraMessage) {
+              message += extraMessage;
+            }
             return message;
           })(),
           turn: 'monster',
@@ -820,6 +1254,21 @@ function gameReducer(state, action) {
       };
       
     case 'START_RIDDLE_ATTACK':
+      // Check if hero is frozen - if so, skip their turn
+      if (state.battle.heroFrozen) {
+        return {
+          ...state,
+          battle: {
+            ...state.battle,
+            heroFrozen: false, // Clear frozen state
+            battleMessage: `You are frozen and miss your turn!`,
+            turn: 'monster',
+            heroAttacking: false,
+            monsterAttacking: false
+          }
+        };
+      }
+      
       return {
         ...state,
         battle: {
@@ -892,9 +1341,10 @@ function gameReducer(state, action) {
               ...state.maps,
               [state.currentMapId]: {
                 ...currentMap,
-                monsters: currentMap.monsters.map(m => 
-                  m.id === strongUpdatedMonster.id ? { ...m, isDefeated: true } : m
-                )
+                monsters: currentMap && currentMap.monsters ? 
+                  currentMap.monsters.map(m => 
+                    m.id === strongUpdatedMonster.id ? { ...m, isDefeated: true } : m
+                  ) : []
               }
             },
             battle: {
@@ -976,12 +1426,66 @@ function gameReducer(state, action) {
       }
       
     case 'MONSTER_ATTACK':
-      let monsterAttackDamage = state.battle.currentMonster.attackDamage;
+      // Check if monster is frozen - if so, decrement turns and skip
+      if (state.battle.monsterFrozen) {
+        const remaining = Math.max(0, (state.battle.monsterFrozenTurns || 0) - 1);
+        return {
+          ...state,
+          battle: {
+            ...state.battle,
+            monsterFrozen: remaining > 0,
+            monsterFrozenTurns: remaining,
+            battleMessage: `The ${state.battle.currentMonster.type} is frozen and misses its turn! (${remaining} turns left)`,
+            turn: 'hero',
+            monsterAttacking: false,
+            heroAttacking: false
+          }
+        };
+      }
       
-      // Special hydra damage calculation
-      if (state.battle.currentMonster.type === 'hydra' && state.battle.currentMonster.isBoss) {
+      let monsterAttackDamage = state.battle.currentMonster.attackDamage;
+      let currentMonsterForAttack = state.battle.currentMonster;
+      
+      // Apply fire damage to monster if it's on fire
+      let fireDamageMessage = '';
+      if (state.battle.currentMonster.onFire) {
+        const fireDamage = 2;
+        currentMonsterForAttack = {
+          ...state.battle.currentMonster,
+          hp: Math.max(0, state.battle.currentMonster.hp - fireDamage)
+        };
+        fireDamageMessage = `🔥 The ${state.battle.currentMonster.type} takes ${fireDamage} fire damage! `;
+        
+        // If monster dies from fire damage
+        if (currentMonsterForAttack.hp <= 0) {
+          return {
+            ...state,
+            maps: {
+              ...state.maps,
+              [state.currentMapId]: {
+                ...currentMap,
+                monsters: currentMap && currentMap.monsters ? 
+                  currentMap.monsters.map(m => 
+                    m.id === currentMonsterForAttack.id ? { ...m, isDefeated: true } : m
+                  ) : []
+              }
+            },
+            battle: {
+              ...state.battle,
+              currentMonster: currentMonsterForAttack,
+              battleMessage: `${fireDamageMessage}The ${currentMonsterForAttack.type} was defeated by fire!`,
+              turn: 'victory',
+              monsterAttacking: false,
+              heroAttacking: false
+            }
+          };
+        }
+      }
+      
+      // Special hydra damage calculation - Always calculate based on current heads
+      if (currentMonsterForAttack.type === 'hydra' && currentMonsterForAttack.isBoss) {
         // Each head hits independently with 3-5 damage
-        const heads = state.battle.currentMonster.heads;
+        const heads = currentMonsterForAttack.heads;
         let totalDamage = 0;
         
         for (let i = 0; i < heads; i++) {
@@ -990,54 +1494,41 @@ function gameReducer(state, action) {
         
         // Minimum damage of 25 regardless of head count
         monsterAttackDamage = Math.max(25, totalDamage);
+      } else if (currentMonsterForAttack.type === 'dragon' && currentMonsterForAttack.isBoss && currentMonsterForAttack.size === 2) {
+        // Big dragon random damage between 40-45 + 5 fire damage
+        monsterAttackDamage = Math.floor(Math.random() * 6) + 40; // 40-45 damage
+        // Add 5 fire damage (will be handled separately)
+      } else if (currentMonsterForAttack.type === 'snake' && currentMonsterForAttack.isBoss && currentMonsterForAttack.size === 2) {
+        // Large snake random damage between 25-35
+        monsterAttackDamage = Math.floor(Math.random() * 11) + 25; // 25-35 damage
+      } else {
+              // For non-hydra monsters, use their regular attack damage
+      monsterAttackDamage = currentMonsterForAttack.attackDamage;
+      
+      // Pirate captain uses spear weapon (+7 damage and freeze chance)
+      if (currentMonsterForAttack.type === 'pirate_captain' && currentMonsterForAttack.hasSpear) {
+        monsterAttackDamage += 7;
+      }
+      // Witch maintains random range 25-40 per attack
+      if (currentMonsterForAttack.type === 'witch') {
+        monsterAttackDamage = Math.floor(Math.random() * 16) + 25;
+      }
       }
       
-      // Troll double damage chance (25%)
+      // Monster double damage chance (use monster's specific chance if available)
       let doubleDamageMessage = '';
-      if (state.battle.currentMonster.type === 'troll') {
+      if (currentMonsterForAttack.doubleDamageChance) {
+        if (Math.random() < currentMonsterForAttack.doubleDamageChance) {
+          monsterAttackDamage *= 2;
+          doubleDamageMessage = `💥 Double damage! (Διπλή ζημιά!) `;
+        }
+      } else if (currentMonsterForAttack.type === 'troll') {
+        // Legacy support for regular trolls (25% chance)
         const doubleDamageChance = 0.25; // 25% chance
         if (Math.random() < doubleDamageChance) {
           monsterAttackDamage *= 2;
           doubleDamageMessage = `💥 Double damage! (Διπλή ζημιά!) `;
         }
-      }
-      
-      // Apply fire damage to monster if it's on fire
-      let fireDamageMessage = '';
-      if (state.battle.currentMonster.onFire) {
-        const fireDamage = 2;
-        const monsterAfterFire = {
-          ...state.battle.currentMonster,
-          hp: Math.max(0, state.battle.currentMonster.hp - fireDamage)
-        };
-        fireDamageMessage = `🔥 The ${state.battle.currentMonster.type} takes ${fireDamage} fire damage! `;
-        
-        // If monster dies from fire damage
-        if (monsterAfterFire.hp <= 0) {
-          return {
-            ...state,
-            maps: {
-              ...state.maps,
-              [state.currentMapId]: {
-                ...currentMap,
-                monsters: currentMap.monsters.map(m => 
-                  m.id === monsterAfterFire.id ? { ...m, isDefeated: true } : m
-                )
-              }
-            },
-            battle: {
-              ...state.battle,
-              currentMonster: monsterAfterFire,
-              battleMessage: `${fireDamageMessage}The ${monsterAfterFire.type} was defeated by fire!`,
-              turn: 'victory',
-              monsterAttacking: false,
-              heroAttacking: false
-            }
-          };
-        }
-        
-        // Update monster with fire damage
-        monsterAttackDamage = monsterAfterFire.attackDamage;
       }
       
       // Check for armor damage reduction and shield block
@@ -1047,12 +1538,12 @@ function gameReducer(state, action) {
       let blocked = false;
       
       // Check armor for damage reduction
-      if (armorEquipped && armorEquipped.defense) {
+      if (armorEquipped && EQUIPMENT_ITEMS[armorEquipped] && EQUIPMENT_ITEMS[armorEquipped].defense) {
         // Special case: hydra takes extra damage reduction
-        if (state.battle.currentMonster.type === 'hydra' && state.battle.currentMonster.isBoss) {
+        if (currentMonsterForAttack.type === 'hydra' && currentMonsterForAttack.isBoss) {
           damageReduction = 3; // 3 damage reduction vs hydra
         } else {
-          damageReduction = armorEquipped.defense; // Normal damage reduction vs other monsters
+          damageReduction = EQUIPMENT_ITEMS[armorEquipped].defense; // Normal damage reduction vs other monsters
         }
       }
       
@@ -1074,10 +1565,59 @@ function gameReducer(state, action) {
         monsterAttackDamage = Math.max(0, monsterAttackDamage - damageReduction);
       }
       
-      const heroAfterAttack = {
+      // Handle fire damage from big dragon
+      let fireDamage = 0;
+      let dragonFireMessage = '';
+      if (currentMonsterForAttack.type === 'dragon' && currentMonsterForAttack.isBoss && currentMonsterForAttack.size === 2) {
+        // Check if hero has red armor (fire immune)
+        const hasRedArmor = armorEquipped && EQUIPMENT_ITEMS[armorEquipped] && EQUIPMENT_ITEMS[armorEquipped].fireImmune;
+        if (!hasRedArmor) {
+          fireDamage = 5;
+          dragonFireMessage = `🔥 +5 fire damage! `;
+        } else {
+          dragonFireMessage = `🔥 Fire damage blocked by Red Armor! `;
+        }
+      }
+      
+      const totalDamage = monsterAttackDamage + fireDamage;
+      
+      // Handle poison application from large spider
+      let poisonMessage = '';
+      let heroAfterAttack = {
         ...state.hero,
-        hp: Math.max(0, state.hero.hp - monsterAttackDamage)
+        hp: Math.max(0, state.hero.hp - totalDamage)
       };
+      
+      // Apply poison damage if hero is already poisoned
+      if (state.hero.isPoisoned && !blocked) {
+        const poisonDamage = 10;
+        heroAfterAttack = {
+          ...heroAfterAttack,
+          hp: Math.max(0, heroAfterAttack.hp - poisonDamage)
+        };
+        poisonMessage = `☠️ Poison damage: ${poisonDamage}! (☠️ Ζημιά από δηλητήριο: ${poisonDamage}!) `;
+      }
+      
+      // Apply new poison from large spider attack
+      if (currentMonsterForAttack.hasPoison && !blocked) {
+        heroAfterAttack = {
+          ...heroAfterAttack,
+          isPoisoned: true
+        };
+        poisonMessage += `☠️ You are poisoned! (☠️ Είστε δηλητηριασμένοι!) `;
+      }
+      
+      // Apply freeze effect from pirate captain's spear
+      let freezeMessage = '';
+      if (currentMonsterForAttack.type === 'pirate_captain' && currentMonsterForAttack.hasSpear && !blocked) {
+        if (Math.random() < 0.20) { // 20% chance to freeze per attack
+          heroAfterAttack = {
+            ...heroAfterAttack,
+            isFrozen: true
+          };
+          freezeMessage = `❄️ You are frozen and will miss your next turn! (❄️ Είστε παγωμένοι και θα χάσετε την επόμενη σας σειρά!) `;
+        }
+      }
       
       if (heroAfterAttack.hp <= 0 && !blocked) {
         return {
@@ -1085,7 +1625,8 @@ function gameReducer(state, action) {
           hero: heroAfterAttack,
           battle: {
             ...state.battle,
-            battleMessage: `The ${state.battle.currentMonster.type} defeated you! (Το ${state.battle.currentMonster.type} σας νίκησε!)`,
+            currentMonster: currentMonsterForAttack,
+            battleMessage: `The ${currentMonsterForAttack.type} defeated you! (Το ${currentMonsterForAttack.type} σας νίκησε!)`,
             turn: 'defeat',
             monsterAttacking: true,
             heroAttacking: false
@@ -1098,12 +1639,12 @@ function gameReducer(state, action) {
       
 
       const damageMessage = blocked ? 
-        `${fireDamageMessage}The ${state.battle.currentMonster.type} attacks but you block it with your shield! (Το ${state.battle.currentMonster.type} επιτίθεται αλλά το αποκλείετε με την ασπίδα σας!)` :
+        `${fireDamageMessage}${dragonFireMessage}The ${currentMonsterForAttack.type} attacks but you block it with your shield! (Το ${currentMonsterForAttack.type} επιτίθεται αλλά το αποκλείετε με την ασπίδα σας!)` :
         (() => {
-          if (state.battle.currentMonster.type === 'hydra' && state.battle.currentMonster.isBoss) {
-            return `${fireDamageMessage}${doubleDamageMessage}The Hydra's ${state.battle.currentMonster.heads} heads attack you for ${monsterAttackDamage} damage! (Τα ${state.battle.currentMonster.heads} κεφάλια της Ύδρας σας επιτίθενται για ${monsterAttackDamage} ζημιά!)`;
+          if (currentMonsterForAttack.type === 'hydra' && currentMonsterForAttack.isBoss) {
+            return `${fireDamageMessage}${dragonFireMessage}${poisonMessage}${doubleDamageMessage}The Hydra's ${currentMonsterForAttack.heads} heads attack you for ${monsterAttackDamage} damage! (Τα ${currentMonsterForAttack.heads} κεφάλια της Ύδρας σας επιτίθενται για ${monsterAttackDamage} ζημιά!)`;
           } else {
-            return `${fireDamageMessage}${doubleDamageMessage}The ${state.battle.currentMonster.type} attacks you for ${monsterAttackDamage} damage! (Το ${state.battle.currentMonster.type} σας επιτίθεται για ${monsterAttackDamage} ζημιά!)`;
+            return `${fireDamageMessage}${dragonFireMessage}${poisonMessage}${doubleDamageMessage}The ${currentMonsterForAttack.type} attacks you for ${totalDamage} damage! (Το ${currentMonsterForAttack.type} σας επιτίθεται για ${totalDamage} ζημιά!)`;
           }
         })();
       
@@ -1118,7 +1659,9 @@ function gameReducer(state, action) {
         hero: heroAfterAttack,
         battle: {
           ...state.battle,
-                      battleMessage: `${damageMessage}${hasQueuedAttack && !isLastAttack ? ' (Penalty attack) (Ποινική επίθεση)' : ''}`,
+          currentMonster: currentMonsterForAttack,
+          heroFrozen: heroAfterAttack.isFrozen || false, // Set hero frozen state
+          battleMessage: `${damageMessage}${freezeMessage}${hasQueuedAttack && !isLastAttack ? ' (Penalty attack) (Ποινική επίθεση)' : ''}`,
           turn: hasQueuedAttack && !isLastAttack ? 'monster' : 'hero',
           monsterAttacking: true,
           heroAttacking: false,
@@ -1136,7 +1679,7 @@ function gameReducer(state, action) {
         }
       };
       
-    case 'CLEAR_POTION_MESSAGE':
+    case 'CLEAR_BATTLE_MESSAGE':
       return {
         ...state,
         battle: {
@@ -1186,57 +1729,270 @@ function gameReducer(state, action) {
         };
       }
       
-    case 'COLLECT_ARMOR':
+    case 'COLLECT_ARMOR': {
+      const { armorId } = action.payload;
+      const currentMap = state.maps[state.currentMapId]; // Corrected from state.currentMap.id
+      const armorToCollect = currentMap.items.find(item => item.id === armorId);
+
+      if (armorToCollect && armorToCollect.type === 'armor' && !armorToCollect.isCollected) {
+        // Proximity check: Hero must be adjacent to the armor
+        const distanceX = Math.abs(state.hero.x - armorToCollect.x);
+        const distanceY = Math.abs(state.hero.y - armorToCollect.y);
+        const isAdjacent = distanceX <= 1 && distanceY <= 1;
+
+        if (!isAdjacent) {
+          return {
+            ...state,
+            battle: {
+              ...state.battle,
+              battleMessage: `You are too far from the ${armorToCollect.name} to collect it.`
+            }
+          };
+        }
+
+        // Check if armor is guarded by monsters
+        if (armorToCollect.guardedByMonsters && armorToCollect.guardedByMonsters.length > 0) {
+          const guardingMonsters = currentMap.monsters.filter(monster => 
+            armorToCollect.guardedByMonsters.includes(monster.id)
+          );
+
+          const allGuardingMonstersDefeated = guardingMonsters.every(monster => monster.isDefeated);
+
+          if (!allGuardingMonstersDefeated) {
+            // If not all guarding monsters are defeated, display a message and do not collect
+            return {
+              ...state,
+              battle: {
+                ...state.battle,
+                battleMessage: `The ${armorToCollect.name} is guarded by powerful monsters! Defeat them first.`
+              }
+            };
+          }
+        }
+
+        // If not guarded or all guarding monsters defeated, proceed with collection
+        const updatedItems = currentMap && currentMap.items ? 
+          currentMap.items.map(item =>
+            item.id === armorId ? { ...item, isCollected: true } : item
+          ) : [];
+        
+        // Map armor name to equipment key
+        const getArmorKey = (armorName) => {
+          if (armorName === 'Red Armor') return 'redArmor';
+          if (armorName === 'Dungeon Armor') return 'dungeonArmor';
+          return 'armor'; // fallback
+        };
+        
+        const armorKey = getArmorKey(armorToCollect.name);
+        const currentArmorEquipped = state.hero.equipment.armor;
+        
+        // Check if hero already has armor equipped
+        if (currentArmorEquipped) {
+          // Move current armor to bag and equip new armor
+          return {
+            ...state,
+            hero: {
+              ...state.hero,
+              equipment: {
+                ...state.hero.equipment,
+                armor: armorKey
+              },
+              bag: {
+                ...state.hero.bag,
+                armor: [...(state.hero.bag.armor || []), currentArmorEquipped]
+              }
+            },
+            maps: {
+              ...state.maps,
+              [state.currentMapId]: {
+                ...currentMap,
+                items: updatedItems
+              }
+            },
+            battle: {
+              ...state.battle,
+              battleMessage: `You equipped the ${armorToCollect.name}! Previous armor moved to bag. Damage reduction: ${armorToCollect.defense}${armorToCollect.fireImmune ? ', Fire Immune' : ''}`
+            }
+          };
+        } else {
+          // No armor equipped, just equip the new armor
+          return {
+            ...state,
+            hero: {
+              ...state.hero,
+              equipment: {
+                ...state.hero.equipment,
+                armor: armorKey
+              }
+            },
+            maps: {
+              ...state.maps,
+              [state.currentMapId]: {
+                ...currentMap,
+                items: updatedItems
+              }
+            },
+            battle: {
+              ...state.battle,
+              battleMessage: `You equipped the ${armorToCollect.name}! Damage reduction: ${armorToCollect.defense}${armorToCollect.fireImmune ? ', Fire Immune' : ''}`
+            }
+          };
+        }
+      }
+      return state;
+    }
+      
+    case 'COLLECT_PORTABLE_ITEM':
       if (!currentMap) return state;
       
-      const armorToCollect = currentMap.items.find(item => 
-        item.id === action.payload.armorId && item.type === 'armor'
+      // Find portable item (portablePotion or freezingBomb) in map items
+      const portableItemToCollect = currentMap.items && currentMap.items.find(item => 
+        item.id === action.payload.itemId && (item.type === 'portablePotion' || item.type === 'freezingBomb')
       );
       
-      if (armorToCollect && !armorToCollect.isCollected) {
-        console.log('Collecting armor via click:', armorToCollect);
+      if (portableItemToCollect && !portableItemToCollect.isCollected) {
+        // If guarded, ensure guardian defeated
+        if (portableItemToCollect.guardedBy !== null && portableItemToCollect.guardedBy !== undefined) {
+          let guardianDefeated = true;
+          if (Array.isArray(portableItemToCollect.guardedBy)) {
+            guardianDefeated = portableItemToCollect.guardedBy.every(guardianId => {
+              const monster = currentMap.monsters.find(m => m.id === guardianId);
+              return monster?.isDefeated;
+            });
+          } else {
+            const monster = currentMap.monsters.find(m => m.id === portableItemToCollect.guardedBy);
+            guardianDefeated = monster?.isDefeated;
+          }
+          if (!guardianDefeated) {
+            return state;
+          }
+        }
+        console.log('Collecting portable item via click:', portableItemToCollect);
         
         return {
           ...state,
           hero: {
             ...state.hero,
-            equipment: {
-              ...state.hero.equipment,
-              armor: armorToCollect
-            }
+            portableItems: [...state.hero.portableItems, portableItemToCollect]
           },
           maps: {
             ...state.maps,
             [state.currentMapId]: {
               ...currentMap,
-              items: currentMap.items.map(item =>
-                item.id === armorToCollect.id
-                  ? { ...item, isCollected: true }
-                  : item
-              )
+              items: currentMap && currentMap.items ? 
+                currentMap.items.map(item =>
+                  item.id === portableItemToCollect.id
+                    ? { ...item, isCollected: true } : item
+                ) : []
             }
           },
           battle: {
             ...state.battle,
-            battleMessage: `You equipped the ${armorToCollect.name}! Damage reduction: ${armorToCollect.defense} (Εξοπλιστήκατε με το ${armorToCollect.name}! Μείωση ζημιάς: ${armorToCollect.defense})`
+            battleMessage: portableItemToCollect.type === 'freezingBomb' ?
+              `Συλλέξατε την ${portableItemToCollect.name}! (❄️ Παγώνει εχθρούς για ${portableItemToCollect.freezeTurns} γύρους)` :
+              `You collected the ${portableItemToCollect.name}! (+${portableItemToCollect.healAmount} HP)`
           }
         };
       }
       return state;
       
     case 'SHOP_INTERACTION':
-      return {
-        ...state,
-        battle: {
-          ...state.battle,
-          isActive: false,
-          currentMonster: null,
-          battleQueue: [],
-          currentRiddle: null,
-          battleMessage: 'Shop is closed right now, please return later. (Το κατάστημα είναι κλειστό τώρα, παρακαλώ επιστρέψτε αργότερα.)',
-          awaitingRiddleAnswer: false,
+      console.log('SHOP_INTERACTION action received', action.payload);
+      
+      // Check if current map has a shop configuration (for Crossroads, etc.)
+      if (currentMap.shop && currentMap.shop.inventory) {
+        return {
+          ...state,
+          shop: {
+            ...state.shop,
+            isOpen: true,
+            inventory: currentMap.shop.inventory
+          }
+        };
+      }
+      
+      // Check if hydra is defeated (shop opens when hydra is defeated) - for dungeon
+      const hydraDefeated = currentMap.monsters.find(monster => 
+        monster.type === 'hydra' && monster.isBoss
+      )?.isDefeated;
+      
+      if (hydraDefeated) {
+        return {
+          ...state,
+          shop: {
+            ...state.shop,
+            isOpen: true
+          }
+        };
+      } else {
+        return {
+          ...state,
+          battle: {
+            ...state.battle,
+            isActive: false,
+            currentMonster: null,
+            battleQueue: [],
+            currentRiddle: null,
+            battleMessage: 'Shop is closed right now, please return later. (Το κατάστημα είναι κλειστό τώρα, παρακαλώ επιστρέψτε αργότερα.)',
+            awaitingRiddleAnswer: false,
+          }
+        };
+      }
+      
+    case 'USE_PORTABLE_ITEM':
+      if (!state.battle.isActive) return state;
+      
+      const itemToUse = state.hero.portableItems.find(item => 
+        item.id === action.payload.itemId
+      );
+      
+      if (itemToUse) {
+        if (itemToUse.type === 'freezingBomb') {
+          // Freeze the monster for specified turns
+          const freezeTurns = itemToUse.freezeTurns || 5;
+          return {
+            ...state,
+            hero: {
+              ...state.hero,
+              portableItems: state.hero.portableItems.filter(item => item.id !== itemToUse.id)
+            },
+            battle: {
+              ...state.battle,
+              monsterFrozen: true,
+              monsterFrozenTurns: freezeTurns,
+              battleMessage: `❄️ Χρησιμοποιήσατε την ${itemToUse.name}! Ο εχθρός παγώνει για ${freezeTurns} γύρους!`,
+              turn: 'hero'
+            }
+          };
+        } else {
+          const newHp = Math.min(state.hero.maxHp, state.hero.hp + itemToUse.healAmount);
+          const healAmount = newHp - state.hero.hp;
+          
+          let battleMessage = `You used ${itemToUse.name}! +${healAmount} HP (Χρησιμοποιήσατε ${itemToUse.name}! +${healAmount} HP)`;
+          
+          // Check if hero was poisoned and clear it
+          const wasPoisoned = state.hero.isPoisoned;
+          
+          return {
+            ...state,
+            hero: {
+              ...state.hero,
+              hp: newHp,
+              isPoisoned: false, // Clear poison when using portable potion
+              poisonDamage: 0,
+              portableItems: state.hero.portableItems.filter(item => item.id !== itemToUse.id)
+            },
+            battle: {
+              ...state.battle,
+              battleMessage: wasPoisoned ? 
+                `${battleMessage} Poison cured! (Δηλητήριο θεραπεύθηκε!)` : 
+                battleMessage,
+              turn: 'hero' // Keep hero's turn so they can still attack
+            }
+          };
         }
-      };
+      }
+      return state;
       
     case 'COLLECT_EQUIPMENT':
       if (!currentMap) return state;
@@ -1257,7 +2013,7 @@ function gameReducer(state, action) {
       const equipmentConfig = EQUIPMENT_ITEMS[equipmentToCollect.equipmentType];
       
       // RING: Simple logic - if no ring equipped, give ring with 3 charges
-      if (equipmentConfig.type === 'ring') {
+      if (equipmentConfig.type === EQUIPMENT_TYPES.ACCESSORY) {
         if (state.hero.equipment.ring) return state; // Already has ring
         
         return {
@@ -1271,9 +2027,10 @@ function gameReducer(state, action) {
             ...state.maps,
             [state.currentMapId]: {
               ...currentMap,
-              items: currentMap.items.map(item =>
-                item.id === equipmentToCollect.id ? { ...item, isCollected: true } : item
-              )
+              items: currentMap && currentMap.items ? 
+                currentMap.items.map(item =>
+                  item.id === equipmentToCollect.id ? { ...item, isCollected: true } : item
+                ) : []
             }
           },
           battle: {
@@ -1315,8 +2072,10 @@ function gameReducer(state, action) {
       // If no guardian (guardedBy is null/undefined), allow collection
       
       // Determine equipment slot
-      const equipmentSlot = equipmentConfig.type === 'shield' ? 'shield' : 
+      const equipmentSlot = equipmentConfig.type === EQUIPMENT_TYPES.SHIELD ? 'shield' : 
                            equipmentConfig.type === EQUIPMENT_TYPES.WEAPON ? 'weapon' : 
+                           equipmentConfig.type === EQUIPMENT_TYPES.ARMOR ? 'armor' :
+                           equipmentConfig.type === EQUIPMENT_TYPES.ACCESSORY ? 'ring' :
                            equipmentConfig.type;
       
       // Check if hero already has equipment in this slot
@@ -1334,21 +2093,22 @@ function gameReducer(state, action) {
             },
             bag: {
               ...state.hero.bag,
-              [equipmentSlot]: [...state.hero.bag[equipmentSlot], currentEquipped]
+              [equipmentSlot]: [...(state.hero.bag[equipmentSlot] || []), currentEquipped]
             }
           },
           maps: {
             ...state.maps,
             [state.currentMapId]: {
               ...currentMap,
-              items: currentMap.items.map(item =>
-                item.id === equipmentToCollect.id ? { ...item, isCollected: true } : item
-              )
+              items: currentMap && currentMap.items ? 
+                currentMap.items.map(item =>
+                  item.id === equipmentToCollect.id ? { ...item, isCollected: true } : item
+                ) : []
             }
           },
           battle: {
             ...state.battle,
-            battleMessage: `You equipped the ${equipmentConfig.name}! Previous ${EQUIPMENT_ITEMS[currentEquipped].name} moved to bag.`
+            battleMessage: `You equipped the ${equipmentConfig.name}!${equipmentConfig.fireImmune ? ' Fire Immune' : ''} Previous ${currentEquipped ? EQUIPMENT_ITEMS[currentEquipped]?.name || currentEquipped : 'item'} moved to bag.`
           }
         };
       } else {
@@ -1366,17 +2126,214 @@ function gameReducer(state, action) {
             ...state.maps,
             [state.currentMapId]: {
               ...currentMap,
-              items: currentMap.items.map(item =>
-                item.id === equipmentToCollect.id ? { ...item, isCollected: true } : item
-              )
+              items: currentMap && currentMap.items ? 
+                currentMap.items.map(item =>
+                  item.id === equipmentToCollect.id ? { ...item, isCollected: true } : item
+                ) : []
             }
           },
           battle: {
             ...state.battle,
-            battleMessage: `You equipped the ${equipmentConfig.name}!`
+            battleMessage: `You equipped the ${equipmentConfig.name}!${equipmentConfig.fireImmune ? ' Fire Immune' : ''}`
           }
         };
       }
+      
+    case 'COLLECT_TREASURE':
+      if (!currentMap) return state;
+      
+      const treasureToCollect = currentMap.items.find(item => 
+        item.id === action.payload.treasureId
+      );
+      
+      if (!treasureToCollect || treasureToCollect.isCollected) {
+        return state;
+      }
+      
+      return {
+        ...state,
+        hero: {
+          ...state.hero,
+          gold: state.hero.gold + 50 // Treasure gives 50 gold
+        },
+        maps: {
+          ...state.maps,
+          [state.currentMapId]: {
+            ...currentMap,
+            items: currentMap && currentMap.items ? 
+              currentMap.items.map(item =>
+                item.id === treasureToCollect.id ? { ...item, isCollected: true } : item
+              ) : []
+          }
+        },
+        battle: {
+          ...state.battle,
+          battleMessage: `You found a treasure chest! +50 gold! (Βρήκατε ένα θησαυρό! +50 χρυσά!)`
+        }
+      };
+      
+    case 'OPEN_SHOP':
+      return {
+        ...state,
+        shop: {
+          ...state.shop,
+          isOpen: true
+        }
+      };
+      
+    case 'CLOSE_SHOP':
+      return {
+        ...state,
+        shop: {
+          ...state.shop,
+          isOpen: false
+        }
+      };
+      
+    case 'SHOP_BUY_ITEM':
+      const { itemType: buyItemType, price: buyPrice, name: buyItemName } = action.payload;
+      
+      // Check if player can afford the item
+      if (state.hero.gold < buyPrice) {
+        return {
+          ...state,
+          battle: {
+            ...state.battle,
+            battleMessage: `Not enough gold! You need ${buyPrice} gold to buy ${buyItemName}.`
+          }
+        };
+      }
+      
+      // For portable potions, check if player already has 3 (only for dungeon shop)
+      if (buyItemType === 'portablePotion') {
+        const currentPortableCount = state.hero.portableItems.filter(item => item.type === 'portablePotion').length;
+        // Allow unlimited portable potions for testing shops (like Crossroads)
+        if (currentPortableCount >= 10) { // Increased limit for testing
+          return {
+            ...state,
+            battle: {
+              ...state.battle,
+              battleMessage: `You can only carry 10 portable healing potions at a time!`
+            }
+          };
+        }
+      }
+      
+      // Handle different item types
+      let updatedHero = { ...state.hero, gold: state.hero.gold - buyPrice };
+      
+      if (buyItemType === 'portablePotion') {
+        // Add portable potion
+        updatedHero.portableItems = [...state.hero.portableItems, { 
+          id: Date.now(), 
+          type: 'portablePotion', 
+          name: 'Portable Healing Potion', 
+          healAmount: 50 
+        }];
+      } else if (buyItemType === 'redArmor') {
+        // Add red armor to bag
+        updatedHero.bag = { ...state.hero.bag, armor: [...state.hero.bag.armor, 'redArmor'] };
+      } else if (buyItemType === 'dungeonArmor') {
+        // Add dungeon armor to bag
+        updatedHero.bag = { ...state.hero.bag, armor: [...state.hero.bag.armor, 'dungeonArmor'] };
+      } else if (buyItemType === 'flamingSword') {
+        // Add flaming sword to bag
+        updatedHero.bag = { ...state.hero.bag, weapon: [...state.hero.bag.weapon, 'flamingSword'] };
+      } else if (buyItemType === 'shield') {
+        // Add shield to bag
+        updatedHero.bag = { ...state.hero.bag, shield: [...state.hero.bag.shield, 'shield'] };
+      }
+      
+      // Proceed with purchase
+      return {
+        ...state,
+        hero: updatedHero,
+        battle: {
+          ...state.battle,
+          battleMessage: `You bought ${buyItemName} for ${buyPrice} gold!`
+        }
+      };
+      
+    case 'SHOP_SELL_ITEM':
+      const { itemType: sellItemType, price: sellPrice, name: sellItemName } = action.payload;
+      
+      // Handle selling bag items only (no longer selling equipped items)
+      let newBag = { ...state.hero.bag };
+      let itemSold = false;
+      
+      // Check bag for the item
+      Object.keys(newBag).forEach(slot => {
+        const itemIndex = newBag[slot].indexOf(sellItemType);
+        if (itemIndex !== -1) {
+          newBag[slot] = newBag[slot].filter((_, index) => index !== itemIndex);
+          itemSold = true;
+        }
+      });
+      
+      if (itemSold) {
+        return {
+          ...state,
+          hero: {
+            ...state.hero,
+            gold: state.hero.gold + sellPrice,
+            bag: newBag
+          },
+          battle: {
+            ...state.battle,
+            battleMessage: `You sold ${sellItemName} for ${sellPrice} gold!`
+          }
+        };
+      }
+      return state;
+      
+    case 'SHOP_SELL_PORTABLE_ITEM':
+      const { itemId: portableItemId, itemType: portableItemType, price: portableSellPrice, name: portableSellName } = action.payload;
+      
+      // Find and remove the portable item
+      const portableItemIndex = state.hero.portableItems.findIndex(item => item.id === portableItemId);
+      
+      if (portableItemIndex !== -1) {
+        const newPortableItems = [...state.hero.portableItems];
+        newPortableItems.splice(portableItemIndex, 1);
+        
+        return {
+          ...state,
+          hero: {
+            ...state.hero,
+            gold: state.hero.gold + portableSellPrice,
+            portableItems: newPortableItems
+          },
+          battle: {
+            ...state.battle,
+            battleMessage: `You sold ${portableSellName} for ${portableSellPrice} gold!`
+          }
+        };
+      }
+      return state;
+      
+    case 'COLLECT_GOLD':
+      const { amount: goldAmount, itemId: goldItemId } = action.payload;
+      return {
+        ...state,
+        hero: {
+          ...state.hero,
+          gold: (state.hero.gold || 0) + goldAmount
+        },
+        maps: {
+          ...state.maps,
+          [state.currentMapId]: {
+            ...currentMap,
+            items: currentMap && currentMap.items ? 
+              currentMap.items.map(item =>
+                item.id === goldItemId ? { ...item, isCollected: true } : item
+              ) : []
+          }
+        },
+        battle: {
+          ...state.battle,
+          battleMessage: `You collected ${goldAmount} gold! 💰`
+        }
+      };
       
     case 'EQUIP_FROM_BAG':
       const { slot, itemType } = action.payload;
@@ -1456,10 +2413,22 @@ function gameReducer(state, action) {
       
     case 'FLEE_BATTLE':
       // Apply 2 HP penalty for fleeing
-      const heroAfterFlee = {
+      let heroAfterFlee = {
         ...state.hero,
         hp: Math.max(0, state.hero.hp - 2)
       };
+      
+      // Check if fleeing from large spider and apply poison
+      let fleeMessage = `You fled from battle! Lost 2 HP as penalty. (Φύγατε από τη μάχη! Χάσατε 2 HP ως ποινή.)`;
+      
+      if (state.battle.currentMonster && state.battle.currentMonster.type === 'large spider') {
+        heroAfterFlee = {
+          ...heroAfterFlee,
+          isPoisoned: true,
+          poisonDamage: 0
+        };
+        fleeMessage = `You fled from the large spider! Lost 2 HP as penalty and got poisoned! (Φύγατε από τη μεγάλη αράχνη! Χάσατε 2 HP ως ποινή και δηλητηριάσατε!)`;
+      }
       
       return {
         ...state,
@@ -1471,7 +2440,7 @@ function gameReducer(state, action) {
           battleQueue: [],
           currentRiddle: null,
           awaitingRiddleAnswer: false,
-          battleMessage: `You fled from battle! Lost 2 HP as penalty. (Φύγατε από τη μάχη! Χάσατε 2 HP ως ποινή.)`,
+          battleMessage: fleeMessage,
           turn: 'hero',
           monsterAttacking: false,
           heroAttacking: false,
@@ -1504,6 +2473,10 @@ function gameReducer(state, action) {
           permanentHpBonus: 0,
           maxHp: 100,
           hp: 100, // Ensure hero starts with full HP
+          onFire: false, // Clear fire effect
+          fireDamage: 0, // Clear fire damage
+          isPoisoned: false, // Clear poison effect
+          poisonDamage: 0, // Clear poison damage
           bag: {
             weapon: [],
             shield: [],
@@ -1514,10 +2487,188 @@ function gameReducer(state, action) {
         maps: { // Re-initialize maps for a fresh start
           main: createMainMapState(),
           dungeon: createDungeonMapState(),
+          dungeonLevel2: createDungeonLevel2MapState(),
           volcano: createVolcanoMapState(),
-          forest: createForestMapState()
+          forest: createForestMapState(),
+          crossroads: createCrossroadsMapState(),
+          treasureIsland: createTreasureIslandMapState(),
+          trollCastle: createTrollCastleMapState()
         }
       };
+      
+    case 'SHOW_ROAD_SIGN_MESSAGE':
+      return {
+        ...state,
+        battle: {
+          ...state.battle,
+          battleMessage: action.payload.text
+        }
+      };
+
+    case 'CLEAR_ROAD_SIGN_MESSAGE':
+      return {
+        ...state,
+        battle: {
+          ...state.battle,
+          battleMessage: ''
+        }
+      };
+      
+    case 'OPEN_BOOK':
+      return {
+        ...state,
+        book: {
+          isOpen: true,
+          bookType: action.payload.bookType
+        }
+      };
+      
+    case 'CLOSE_BOOK':
+      return {
+        ...state,
+        book: {
+          isOpen: false,
+          bookType: null
+        }
+      };
+      
+    case 'BOAT_INTERACTION':
+      if (!currentMap) return state;
+      
+      const boatItem = currentMap.items.find(item => 
+        item.type === 'boat' && !item.isCollected
+      );
+      
+      if (!boatItem) return state;
+      
+      let newMapId = '';
+      let newHeroX = state.hero.x;
+      let newHeroY = state.hero.y;
+
+      if (state.currentMapId === 'crossroads') {
+        // From Crossroads to Treasure Island
+        newMapId = 'treasureIsland';
+        // Hero will start at (15,4) in Treasure Island
+        newHeroX = 14; // 15 in 1-based = 14 in 0-based
+        newHeroY = 3;  // 4 in 1-based = 3 in 0-based
+      } else if (state.currentMapId === 'treasureIsland') {
+        // From Treasure Island back to Crossroads
+        newMapId = 'crossroads';
+        // Hero will start at (8,3) in Crossroads
+        newHeroX = 7; // 8 in 1-based = 7 in 0-based
+        newHeroY = 2; // 3 in 1-based = 2 in 0-based
+      }
+
+      if (newMapId) {
+        return {
+          ...state,
+          hero: {
+            ...state.hero,
+            x: newHeroX,
+            y: newHeroY,
+          },
+          currentMapId: newMapId,
+          battle: { // Clear any battle state when changing maps
+            ...state.battle,
+            isActive: false,
+            currentMonster: null,
+            battleQueue: [],
+            currentRiddle: null,
+            battleMessage: '',
+            awaitingRiddleAnswer: false,
+          }
+        };
+      }
+      
+      return state;
+      
+    case 'TROLL_CASTLE_INTERACTION':
+      if (!currentMap) return state;
+      
+      const trollCastleItem = currentMap.items.find(item => 
+        item.type === 'trollCastle' && !item.isCollected
+      );
+      
+      if (!trollCastleItem) return state;
+      
+      newMapId = '';
+      newHeroX = state.hero.x;
+      newHeroY = state.hero.y;
+
+      if (state.currentMapId === 'crossroads') {
+        // From Crossroads to Troll Castle
+        newMapId = 'trollCastle';
+        // Hero will start at (1,1) in Troll Castle
+        newHeroX = 0; // 1 in 1-based = 0 in 0-based
+        newHeroY = 0; // 1 in 1-based = 0 in 0-based
+      }
+
+      if (newMapId) {
+        return {
+          ...state,
+          hero: {
+            ...state.hero,
+            x: newHeroX,
+            y: newHeroY,
+          },
+          currentMapId: newMapId,
+          battle: { // Clear any battle state when changing maps
+            ...state.battle,
+            isActive: false,
+            currentMonster: null,
+            battleQueue: [],
+            currentRiddle: null,
+            battleMessage: '',
+            awaitingRiddleAnswer: false,
+          }
+        };
+      }
+      
+      return state;
+      
+    case 'CROSSROADS_INTERACTION':
+      if (!currentMap) return state;
+      
+      const crossroadsItem = currentMap.items.find(item => 
+        item.type === 'crossroads' && !item.isCollected
+      );
+      
+      if (!crossroadsItem) return state;
+      
+      newMapId = '';
+      newHeroX = state.hero.x;
+      newHeroY = state.hero.y;
+
+      if (state.currentMapId === 'trollCastle') {
+        // From Troll Castle back to Crossroads
+        newMapId = 'crossroads';
+        // Hero will start at (8,13) in Crossroads
+        newHeroX = 7; // 8 in 1-based = 7 in 0-based
+        newHeroY = 12; // 13 in 1-based = 12 in 0-based
+      }
+
+      if (newMapId) {
+        return {
+          ...state,
+          hero: {
+            ...state.hero,
+            x: newHeroX,
+            y: newHeroY,
+          },
+          currentMapId: newMapId,
+          battle: { // Clear any battle state when changing maps
+            ...state.battle,
+            isActive: false,
+            currentMonster: null,
+            battleQueue: [],
+            currentRiddle: null,
+            battleMessage: '',
+            awaitingRiddleAnswer: false,
+          }
+        };
+      }
+      
+      return state;
       
     default:
       return state;

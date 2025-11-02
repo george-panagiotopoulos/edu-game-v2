@@ -1,4 +1,5 @@
-import { TILE_TYPES, TRAP_TYPES, EQUIPMENT_ITEMS, EQUIPMENT_TYPES, MAP_WIDTH, MAP_HEIGHT } from '../GameState';
+import { TILE_TYPES, TRAP_TYPES, EQUIPMENT_TYPES, MAP_WIDTH, MAP_HEIGHT } from '../constants';
+import { EQUIPMENT_ITEMS } from '../GameState';
 
 // Generate the dungeon map
 export function generateDungeonMap() {
@@ -96,6 +97,9 @@ export function generateDungeonMap() {
   
   // Dungeon Exit (same as entrance for now)
   tiles[2][16] = TILE_TYPES.DUNGEON_ENTRANCE; // This will be the exit back to main map
+  
+  // Add dungeon level 2 entrance at position (17,13) as requested
+  tiles[13][17] = TILE_TYPES.DUNGEON_ENTRANCE; // This will be the entrance to dungeon level 2
 
   return tiles;
 }
@@ -128,19 +132,19 @@ export function generateDungeonPotions() {
   const potions = [];
   
   // 4 potions in the dungeon
-  const dungeonPotionPositions = [
-    { x: 4, y: 3, healAmount: Math.floor(Math.random() * 41) + 30 }, // Near first castle
-    { x: 15, y: 12, healAmount: Math.floor(Math.random() * 41) + 30 }, // Near second castle
-    { x: 8, y: 8, healAmount: Math.floor(Math.random() * 41) + 30 }, // Central area
-    { x: 11, y: 5, healAmount: Math.floor(Math.random() * 41) + 30 }  // Near water area
+  const potionPositions = [
+    { x: 4, y: 3, healAmount: Math.floor(Math.random() * 36) + 35 }, // Near first castle
+    { x: 15, y: 12, healAmount: Math.floor(Math.random() * 36) + 35 }, // Near second castle
+    { x: 8, y: 8, healAmount: Math.floor(Math.random() * 36) + 35 }, // Central area
+    { x: 11, y: 5, healAmount: Math.floor(Math.random() * 36) + 35 }  // Near water area
   ];
   
-  dungeonPotionPositions.forEach((potion, index) => {
+  potionPositions.forEach((potion, index) => {
     potions.push({
       id: 100 + index + 1, // Use different ID range for dungeon potions
       x: potion.x,
       y: potion.y,
-      type: 'potion',
+      type: 'healingPotion',
       healAmount: potion.healAmount,
       isCollected: false
     });
@@ -158,7 +162,8 @@ export function generateDungeonArmor() {
     type: 'armor',
     name: 'Dungeon Armor',
     defense: 2, // -2 damage reduction
-    isCollected: false
+    isCollected: false,
+    guardedByMonsters: [202, 204, 206, 212] // Monsters guarding the armor
   }];
 }
 

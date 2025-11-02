@@ -1,4 +1,5 @@
-import { TILE_TYPES, TRAP_TYPES, EQUIPMENT_ITEMS, EQUIPMENT_TYPES, MAP_WIDTH, MAP_HEIGHT } from '../GameState';
+import { TILE_TYPES, TRAP_TYPES, EQUIPMENT_TYPES, MAP_WIDTH, MAP_HEIGHT } from '../constants';
+import { EQUIPMENT_ITEMS } from '../GameState';
 
 // Generate the volcano map
 export function generateVolcanoMap() {
@@ -138,11 +139,11 @@ export function generateVolcanoPotions() {
   
   // 5 potions in the volcano as requested
   const potionPositions = [
-    { x: 2, y: 4, healAmount: Math.floor(Math.random() * 41) + 30 },
-    { x: 17, y: 4, healAmount: Math.floor(Math.random() * 41) + 30 },
-    { x: 2, y: 11, healAmount: Math.floor(Math.random() * 41) + 30 },
-    { x: 18, y: 13, healAmount: Math.floor(Math.random() * 41) + 30 },
-    { x: 9, y: 5, healAmount: Math.floor(Math.random() * 41) + 30 }
+    { x: 2, y: 4, healAmount: Math.floor(Math.random() * 36) + 35 },
+    { x: 17, y: 4, healAmount: Math.floor(Math.random() * 36) + 35 },
+    { x: 2, y: 11, healAmount: Math.floor(Math.random() * 36) + 35 },
+    { x: 18, y: 13, healAmount: Math.floor(Math.random() * 36) + 35 },
+    { x: 9, y: 5, healAmount: Math.floor(Math.random() * 36) + 35 }
   ];
   
   potionPositions.forEach((potion, index) => {
@@ -150,7 +151,7 @@ export function generateVolcanoPotions() {
       id: index + 1,
       x: potion.x,
       y: potion.y,
-      type: 'potion',
+      type: 'healingPotion',
       healAmount: potion.healAmount,
       isCollected: false
     });

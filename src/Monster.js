@@ -1,12 +1,20 @@
 import React from 'react';
-import { TILE_SIZE } from './GameState';
+import { TILE_SIZE } from './constants';
 import { getMonsterAsset } from './AssetManager';
 
 function Monster({ monster }) {
   const isSkeleton = monster.type.includes('skeleton');
   const assetUrl = getMonsterAsset(monster.type);
   const isHydra = monster.type === 'hydra' && monster.isBoss;
-  const monsterSize = isHydra && monster.size ? monster.size : 1;
+  const isBigDragon = monster.type === 'dragon' && monster.isBoss && monster.size === 2;
+  const isLargeSnake = monster.type === 'snake' && monster.isBoss && monster.size === 2;
+  const isLargeWolf = monster.type === 'large wolf' && monster.size === 2;
+  const isLargeSpider = monster.type === 'large spider' && monster.size === 2;
+  const isTrollChieftain = monster.type === 'Troll Chieftain' && monster.size === 3;
+  const monsterSize = isHydra && monster.size ? monster.size : (isBigDragon || isLargeSnake || isLargeWolf || isLargeSpider ? 2 : isTrollChieftain ? 3 : 1);
+  
+  // Debug logging for all monsters
+  console.log(`Monster ${monster.type} (ID: ${monster.id}) asset URL:`, assetUrl);
   
   // Debug logging for skeletons
   if (isSkeleton) {
@@ -37,20 +45,20 @@ function Monster({ monster }) {
         alignItems: 'center',
         justifyContent: 'center'
       }}
-      title={`${monster.type} (${monster.hp}/${monster.maxHp} HP)${isHydra ? ` - Heads: ${monster.heads}` : ''}`}
+      title={`${monster.type} (${monster.hp}/${monster.maxHp} HP)${isHydra ? ` - Heads: ${monster.heads}` : ''}${isBigDragon ? ' - Big Dragon' : ''}${isLargeSnake ? ' - Large Snake' : ''}${isLargeWolf ? ' - Large Wolf' : ''}${isLargeSpider ? ' - Large Spider' : ''}${isTrollChieftain ? ' - Troll Chieftain' : ''}`}
+      onError={(e) => {
+        console.error('Monster image failed to load:', monster.type, assetUrl, e);
+      }}
     >
       {/* Add an img element to test loading */}
       {isSkeleton && (
         <img 
-          src={assetUrl} 
+          src={assetUrl}
           alt={monster.type}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain'
+          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          onError={(e) => {
+            console.error('Skeleton image failed to load:', monster.type, assetUrl, e);
           }}
-          onLoad={() => console.log(`${monster.type} image loaded successfully`)}
-          onError={(e) => console.error(`${monster.type} image failed to load:`, e)}
         />
       )}
     </div>

@@ -1,4 +1,5 @@
-import { TILE_TYPES, TRAP_TYPES, EQUIPMENT_ITEMS, EQUIPMENT_TYPES, MAP_WIDTH, MAP_HEIGHT } from '../GameState';
+import { TILE_TYPES, TRAP_TYPES, EQUIPMENT_TYPES, MAP_WIDTH, MAP_HEIGHT } from '../constants';
+import { EQUIPMENT_ITEMS } from '../GameState';
 
 // Generate a rich medieval village with varied terrain and structures
 export function generateMap() {
@@ -225,6 +226,9 @@ export function generateMap() {
   // Add forest entrance (village square at 18,4)
   tiles[4][18] = TILE_TYPES.FOREST_ENTRANCE;
   
+  // Add crossroads entrance at (2,9)
+  tiles[8][1] = TILE_TYPES.VILLAGE_ENTRANCE;
+  
   return tiles;
 }
 
@@ -242,16 +246,16 @@ export function generatePotions() {
   
   // 2 potions behind monsters (in areas that require defeating monsters to reach)
   const behindMonsterPositions = [
-    { x: 1, y: 4, healAmount: Math.floor(Math.random() * 41) + 30 }, // Behind goblin area
-    { x: 18, y: 5, healAmount: Math.floor(Math.random() * 41) + 30 }  // Behind skeleton area
+    { x: 1, y: 4, healAmount: Math.floor(Math.random() * 36) + 35 }, // Behind goblin area
+    { x: 18, y: 5, healAmount: Math.floor(Math.random() * 36) + 35 }  // Behind skeleton area
   ];
   
   // 4 potions in open spaces (added one more)
   const openSpacePositions = [
-    { x: 8, y: 5, healAmount: Math.floor(Math.random() * 41) + 30 },  // Near windmill
-    { x: 10, y: 8, healAmount: Math.floor(Math.random() * 41) + 30 }, // On main road
-    { x: 6, y: 11, healAmount: Math.floor(Math.random() * 41) + 30 }, // Near bottom area
-    { x: 14, y: 6, healAmount: Math.floor(Math.random() * 41) + 30 }  // New potion location
+    { x: 8, y: 5, healAmount: Math.floor(Math.random() * 36) + 35 },  // Near windmill
+    { x: 10, y: 8, healAmount: Math.floor(Math.random() * 36) + 35 }, // On main road
+    { x: 6, y: 11, healAmount: Math.floor(Math.random() * 36) + 35 }, // Near bottom area
+    { x: 14, y: 6, healAmount: Math.floor(Math.random() * 36) + 35 }  // New potion location
   ];
   
   // Combine all potion positions
@@ -262,13 +266,28 @@ export function generatePotions() {
       id: index + 1,
       x: potion.x,
       y: potion.y,
-      type: 'potion',
+      type: 'healingPotion',
       healAmount: potion.healAmount,
       isCollected: false
     });
   });
   
   return potions;
+}
+
+// Generate gold treasures for the main map
+export function generateMainGold() {
+  return [
+    // Gold treasure at position (1, 3) in 0-based numbering (x=1, y=3)
+    { 
+      id: 101, 
+      x: 1, 
+      y: 3, 
+      type: 'gold', 
+      isCollected: false,
+      amount: 1
+    }
+  ];
 }
 
 // Generate equipment items on the map (next to specific monsters)
@@ -365,7 +384,7 @@ export function createMainMapState() {
     width: MAP_WIDTH,
     height: MAP_HEIGHT,
     tiles: generateMap(),
-    items: [...generatePotions(), ...generateEquipment()],
+    items: [...generatePotions(), ...generateEquipment(), ...generateMainGold()],
     traps: generateMainTraps(),
     monsters: generateMainMonsters()
   };

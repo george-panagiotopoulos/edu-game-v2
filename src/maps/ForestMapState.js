@@ -1,4 +1,5 @@
-import { TILE_TYPES, TRAP_TYPES, EQUIPMENT_ITEMS, EQUIPMENT_TYPES, MAP_WIDTH, MAP_HEIGHT } from '../GameState';
+import { TILE_TYPES, TRAP_TYPES, EQUIPMENT_TYPES, MAP_WIDTH, MAP_HEIGHT } from '../constants';
+import { EQUIPMENT_ITEMS } from '../GameState';
 
 // Generate a dense forest map with varied terrain and structures
 export function generateForestMap() {
@@ -144,12 +145,12 @@ export function generateForestPotions() {
   
   // 6 potions as requested
   const potionPositions = [
-    { x: 6, y: 5, healAmount: Math.floor(Math.random() * 41) + 30 },
-    { x: 2, y: 7, healAmount: Math.floor(Math.random() * 41) + 30 },
-    { x: 7, y: 13, healAmount: Math.floor(Math.random() * 41) + 30 },
-    { x: 14, y: 10, healAmount: Math.floor(Math.random() * 41) + 30 },
-    { x: 8, y: 3, healAmount: Math.floor(Math.random() * 41) + 30 },
-    { x: 12, y: 5, healAmount: Math.floor(Math.random() * 41) + 30 }
+    { x: 6, y: 5, healAmount: Math.floor(Math.random() * 36) + 35 },
+    { x: 2, y: 7, healAmount: Math.floor(Math.random() * 36) + 35 },
+    { x: 7, y: 13, healAmount: Math.floor(Math.random() * 36) + 35 },
+    { x: 14, y: 10, healAmount: Math.floor(Math.random() * 36) + 35 },
+    { x: 8, y: 3, healAmount: Math.floor(Math.random() * 36) + 35 },
+    { x: 12, y: 5, healAmount: Math.floor(Math.random() * 36) + 35 }
   ];
   
   potionPositions.forEach((potion, index) => {
@@ -157,7 +158,7 @@ export function generateForestPotions() {
       id: index + 1,
       x: potion.x,
       y: potion.y,
-      type: 'potion',
+      type: 'healingPotion',
       healAmount: potion.healAmount,
       isCollected: false
     });
@@ -227,7 +228,7 @@ export function generateForestMonsters() {
       isDefeated: false, 
       proximity: 3, 
       attackDamage: 45, // Initial damage (will be calculated dynamically)
-      fast: false, // Hero attacks first
+      fast: true, // Hydra attacks first
       heads: 9, // Number of heads
       headHp: 15, // HP per head
       isBoss: true,

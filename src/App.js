@@ -3,6 +3,8 @@ import { GameProvider, useGame } from './GameState';
 import GameMap from './GameMap';
 import HUD from './HUD';
 import BattleScreen from './BattleScreen';
+import Shop from './Shop';
+import Book from './Book';
 import './App.css';
 
 function GameContent() {
@@ -56,6 +58,8 @@ function GameContent() {
         <p><strong>NEW:</strong> Get close to monsters to trigger epic battles! Choose basic attacks or solve riddles for powerful strikes! (<strong>ΝΕΟ:</strong> Πλησιάστε τα τέρατα για να ενεργοποιήσετε επικές μάχες! Επιλέξτε βασικές επιθέσεις ή λύστε γρίφους για ισχυρές κρούσεις!)</p>
       </div>
       <BattleScreen />
+      {state.shop.isOpen && <Shop />}
+      <Book />
     </div>
   );
 }

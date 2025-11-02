@@ -65,6 +65,10 @@ function BattleScreen() {
     }, 100);
   };
 
+  const handleUsePortableItem = (itemId) => {
+    dispatch({ type: 'USE_PORTABLE_ITEM', payload: { itemId } });
+  };
+
   const getBackgroundColor = () => {
     switch (battle.battleBackground) {
       case 'water':
@@ -228,6 +232,25 @@ function BattleScreen() {
             <button className="battle-btn flee" onClick={handleFlee}>
               🏃 Flee Battle (-2 HP) (Φυγή από τη Μάχη (-2 HP))
             </button>
+            
+            {/* Portable Items */}
+            {hero.portableItems && hero.portableItems.length > 0 && (
+              <div className="portable-items-battle">
+                <h4>Portable Items: (Φορητά Αντικείμενα:)</h4>
+                {hero.portableItems.map((item, index) => (
+                  <button 
+                    key={`portable-${index}`}
+                    className="battle-btn portable-item-btn"
+                    onClick={() => handleUsePortableItem(item.id)}
+                    title={item.type === 'freezingBomb' ? `${item.name} (❄️ Παγώνει τον εχθρό για ${item.freezeTurns} γύρους)` : `${item.name} (+${item.healAmount} HP)`}
+                  >
+                    {item.type === 'freezingBomb' ? '❄️ ' : '🧪 '}
+                    {item.name}
+                    {item.type === 'freezingBomb' ? ` (${item.freezeTurns} γύροι)` : ` (+${item.healAmount} HP)`}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 

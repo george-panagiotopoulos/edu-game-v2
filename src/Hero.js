@@ -1,5 +1,6 @@
 import React from 'react';
-import { TILE_SIZE, useGame, EQUIPMENT_ITEMS, EQUIPMENT_TYPES } from './GameState';
+import { TILE_SIZE, EQUIPMENT_TYPES } from './constants';
+import { useGame, EQUIPMENT_ITEMS } from './GameState';
 import { getHeroAsset, getEquipmentAsset, getItemAsset } from './AssetManager';
 
 function Hero({ x, y }) {
@@ -24,7 +25,7 @@ function Hero({ x, y }) {
       } else {
         tooltipText += ')';
       }
-    } else if (equipment.type === 'shield') {
+    } else if (equipment.type === 'shield' || equipment.type === EQUIPMENT_TYPES.SHIELD) {
       tooltipText += `${Math.round(equipment.blockChance * 100)}% block chance<br/>`;
       if (equipmentType === 'magicShield') {
         tooltipText += `(increases to 40% when HP < 40)<br/>`;
@@ -34,6 +35,19 @@ function Hero({ x, y }) {
         tooltipText += `(αυξάνεται στο 40% όταν HP < 40))`;
       } else {
         tooltipText += ')';
+      }
+    } else if (equipment.type === 'armor' || equipment.type === EQUIPMENT_TYPES.ARMOR) {
+      if (typeof equipment.defense === 'number') {
+        tooltipText += `-${equipment.defense} damage reduction`;
+        if (equipment.fireImmune) {
+          tooltipText += `, Fire Immune`;
+        }
+        tooltipText += `<br/>`;
+        tooltipText += `(-${equipment.defense} μείωση ζημιάς`;
+        if (equipment.fireImmune) {
+          tooltipText += `, Ανοσία στη φωτιά`;
+        }
+        tooltipText += `)`;
       }
     }
     
@@ -104,7 +118,7 @@ function Hero({ x, y }) {
             bottom: '5%',
             width: '15%',
             height: '15%',
-            backgroundImage: `url(${getItemAsset('armor')})`,
+            backgroundImage: `url(${getEquipmentAsset(hero.equipment.armor)})`,
             backgroundSize: 'contain',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
@@ -119,16 +133,14 @@ function Hero({ x, y }) {
           {/* Full resolution armor tooltip */}
           <div className="equipment-tooltip armor-tooltip">
             <img 
-              src={getItemAsset('armor')} 
+              src={getEquipmentAsset(hero.equipment.armor)} 
               alt="Armor" 
               className="tooltip-image"
             />
-            <div className="tooltip-text">
-              <strong>Knight Armor</strong><br/>
-              -2 damage reduction<br/>
-              (Πανοπλία Ιππότη)<br/>
-              -2 μείωση ζημιάς
-            </div>
+            <div 
+              className="tooltip-text"
+              dangerouslySetInnerHTML={{ __html: getEquipmentTooltipText(hero.equipment.armor) }}
+            />
           </div>
         </div>
       )}

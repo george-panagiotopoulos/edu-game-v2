@@ -9,39 +9,78 @@ An educational RPG game designed for young players that combines adventure explo
 - **Grid-based map** with medieval tileset (using kenney_medieval-rts assets)
 - **Hero movement** using arrow keys (↑↓←→)
 - **Collision detection** for blocked areas (walls, rivers, structures)
-- **Multiple map zones** with different difficulty levels
+- **Multiple map zones** with different difficulty levels:
+  - **Main Map**: Village area with basic monsters
+  - **Dungeon**: Underground area with more difficult monsters
+  - **Volcano**: Advanced area with challenging monsters and riddles
+  - **Forest**: New area with trolls, wolves, spiders, snakes, slimes, and hydra boss
 - **Persistent hero state** across the map journey
+- **Map transitions**: Special tiles that allow travel between different maps
+- **Special locations**: Shop in the forest (currently closed)
 
 ### 2. Hero System
 - **Hit Points (HP)**: Hero's health that persists across battles
 - **Position tracking**: Current location on the map
 - **Inventory**: Collected items (healing potions, etc.)
+- **Equipment System**: Weapons, armor, shields, rings with special abilities
+  - **Weapons**: Sword, Axe, Flaming Sword (sets monsters on fire)
+  - **Armor**: Reduces damage (2 damage reduction, 3 against hydra)
+  - **Shield**: Chance to block attacks completely
+  - **Ring**: Limited-use item with special powers
+- **Permanent Bonuses**: Completing maps grants permanent HP bonuses
 - **Statistics**: Battles won/lost, riddles solved correctly
 
 ### 3. Monster System
 - **Random encounters**: Monsters placed at strategic locations
 - **Proximity detection**: Battle triggers when hero gets within 1-2 tiles
-- **Monster variety**: Different types with varying difficulty
+- **Monster variety**: Different types with varying difficulty and special abilities
 - **Monster stats**: HP, attack damage, defense
+- **Special monster abilities**:
+  - **Fast monsters**: Attack first (wolves, snakes)
+  - **Boosted monsters**: Extra HP (slimes in water +25%)
+  - **Hard-hitting monsters**: Increased damage (wolves, snakes +25%)
+  - **Trolls**: 25% chance to deal double damage
+- **Boss monsters**: 
+  - **Hydra**: 2x2 size, 145 HP, 9 heads dealing 3-5 damage each, minimum 25 damage
+    - With Flaming Sword: cutting heads reduces hydra's attack power
+    - Without Flaming Sword: 2 new heads grow for each severed head
 
 ### 4. Battle System
-- **Turn-based combat**: Hero attacks first, then monster
+- **Turn-based combat**: Hero or monster attacks first (depends on monster type)
 - **Two attack types**:
   - **Basic Attack**: No riddle required, deals 10-15 damage
   - **Special Attack**: Requires correct riddle answer, deals 25-35 damage
 - **Riddle mechanics**: Wrong answer results in monster attacking instead
 - **Battle resolution**: Continue until hero or monster HP reaches 0
+- **Special effects**:
+  - **Fire**: Flaming sword sets monsters on fire, dealing 2 damage before their attacks
+  - **Blocking**: Shields have a chance to completely block monster attacks
+  - **Damage reduction**: Armor reduces incoming damage
 
 ### 5. Educational Riddle System
-- **Question categories**: Math, Science, History, Language Arts
+- **Question categories**: Math, Science, History, Language Arts, Geography, German, Spelling
+- **Map-specific riddles**: Each map has unique educational content
+  - **Main Map**: Basic math, general knowledge
+  - **Dungeon**: Intermediate questions
+  - **Volcano**: Advanced questions in Greek
+  - **Forest**:
+    - **Forest Math**: 3-digit + 2-digit addition (first digit 1-3)
+    - **Forest Spelling**: Greek words with common spelling mistakes
+    - **Forest German**: Math in German (numbers 1-20)
 - **Difficulty scaling**: Questions get harder as hero progresses
-- **Random selection**: Questions chosen randomly from category pools
+- **Random selection**: Questions chosen randomly from map-specific category pools
 - **Feedback system**: Immediate feedback on correct/incorrect answers
 
 ### 6. Items and Healing
 - **Healing Potions**: Restore 30-50 HP, randomly placed on map
 - **Treasure chests**: Contain potions or temporary stat boosts
 - **Auto-collection**: Items collected when hero walks over them
+- **Guarded items**: Some items (like the Flaming Sword) require defeating guardian monsters first
+
+### 7. Shop System
+- **Shop location**: Forest map at position (1,13)
+- **Current status**: Shop is closed (displays message in English and Greek)
+- **Future plans**: Will offer items and upgrades
 
 ## Technical Architecture
 
@@ -149,6 +188,22 @@ An educational RPG game designed for young players that combines adventure explo
 - **Medium**: "What type of word describes an action?"
 - **Hard**: "What is a synonym for 'happy'?"
 
+### Forest-Specific Riddles
+- **Forest Math**:
+  - 3-digit + 2-digit addition (first digit 1-3)
+  - Example: "What is 123 + 45?"
+  - Equations with range (-5, 20) including subtraction
+  - Example: "Αν α - 3 = 12, τότε α = ?"
+
+- **Forest Spelling**:
+  - Greek words with common spelling mistakes
+  - Examples: θάλασσα (θάλλασα), άλλος (άλος), μπιφτέκι (μπιφταίκι)
+
+- **Forest German Math**:
+  - Addition and subtraction of numbers between 1-20
+  - Questions and answers in German text instead of Arabic numbers
+  - Example: "Was ist zwei plus drei?"
+
 ## Map Design
 
 ### Tile Types
@@ -159,11 +214,41 @@ An educational RPG game designed for young players that combines adventure explo
 - **Trees**: Blocked terrain
 - **Decorative**: Walkable terrain with visual elements
 
-### Map Features
-- **Starting area**: Safe zone with no monsters
-- **Monster territories**: Areas with higher monster density
-- **Healing shrines**: Guaranteed healing item locations
-- **Treasure areas**: Hidden areas with valuable items
+### Map Areas
+- **Main Map**: Village area with basic layout and monsters
+- **Dungeon**: Underground area with more difficult challenges
+- **Volcano**: Advanced area with dangerous monsters and terrain
+- **Forest Map**: 
+  - **Terrain**: Grass, trees, short paths with crossroads, 4 houses, flowers, and a lake
+  - **Entrance**: From village square (18,4) on the main map
+  - **Exit**: Back to village map at (2,10)
+  - **Special locations**: Shop (1,13)
+
+### Monsters by Map
+
+#### Main Map
+- Basic monsters with standard abilities
+
+#### Dungeon
+- Stronger monsters with increased health and damage
+
+#### Volcano
+- Advanced monsters with special abilities and high damage
+
+#### Forest
+- **Trolls (3)**: 60-70 HP, increased damage, 25% chance for double damage
+- **Wolves (4)**: 25% increased attack damage, attack first
+- **Spiders (2)**: Standard stats
+- **Slimes (2)**: In water, 25% more HP
+- **Snakes (2)**: 25% increased attack damage, attack first
+- **Hydra (Boss)**: 145 HP, 9 heads (each with 15 HP, 3-5 damage per head), minimum damage of 25, special head mechanics
+
+### Special Items by Map
+
+#### Forest
+- **Flaming Sword**: Guarded by 3 trolls, sets enemies on fire (2 damage before attack), same bonuses as axe
+- **Potions (6)**: Healing items scattered throughout the forest
+- **Ring (1)**: Special item with limited uses
 
 ## User Interface
 

@@ -5,10 +5,13 @@ An interactive educational RPG game designed for kids that combines adventure ex
 ## 🎮 Game Features
 
 - **Hero Movement**: Use arrow keys to move your hero around the medieval world
-- **Map Exploration**: Navigate through different terrains including grass, paths, water, walls, and trees
-- **Monster Encounters**: Find and battle various monsters scattered across the map
-- **Visual Interface**: Colorful emoji-based graphics with a clean, kid-friendly design
-- **Real-time HUD**: Track health, position, and progress
+- **Map Exploration**: Navigate through multiple maps (Main Village, Dungeon, Volcano, Forest)
+- **Monster Battles**: Find and battle various monsters with unique abilities
+- **Boss Encounters**: Challenge powerful boss monsters with special mechanics
+- **Equipment System**: Collect and use weapons, shields, armor and rings with special abilities
+- **Visual Interface**: Colorful graphics with a clean, kid-friendly design
+- **Educational Riddles**: Solve math, spelling, geography and language problems during battles
+- **Map-Specific Content**: Each map offers unique monsters, items, and educational challenges
 
 ## 🚀 How to Start the Game
 
@@ -29,34 +32,62 @@ The game will automatically open in your browser at `http://localhost:4455`
 ## 🎯 How to Play
 
 1. **Movement**: Use the arrow keys (↑↓←→) to move your hero
-2. **Exploration**: Explore the map to find monsters and items
-3. **Obstacles**: Avoid water (💧), walls (🧱), and trees (🌳)
+2. **Exploration**: Explore maps to find monsters, items, and map transitions
+3. **Obstacles**: Avoid water (💧), walls (🧱), trees (🌳), and other blocked terrain
 4. **Safe Zones**: Walk on grass (🌱) and paths (🛤️)
-5. **Monsters**: Approach monsters to trigger battles (coming soon!)
+5. **Battles**: Approach monsters to trigger battles
+6. **Riddles**: Answer educational riddles correctly to deal more damage
+7. **Equipment**: Collect weapons, shields, and special items to become stronger
 
-## 🗺️ Map Legend
+## 🗺️ Maps
 
-- 🦸‍♂️ **Hero** - Your character
-- 👹 **Monster** - Enemies to battle
-- 🌱 **Grass** - Safe walkable terrain
-- 🛤️ **Path** - Safe walkable terrain
-- 💧 **Water** - Blocked terrain
-- 🧱 **Wall** - Blocked terrain
-- 🌳 **Tree** - Blocked terrain
+- **Main Village**: Starting area with basic monsters and items
+- **Dungeon**: More challenging underground area with stronger monsters
+- **Volcano**: Advanced area with difficult monsters and educational challenges
+- **Forest**: New area with trolls, wolves, and the hydra boss monster
+
+## 👹 Monster Types
+
+- **Regular Monsters**: Various creatures with standard abilities
+- **Fast Monsters**: Wolves, snakes (attack first)
+- **Strong Monsters**: Trolls (chance for double damage)
+- **Boss Monsters**: Hydra (multi-headed creature with special mechanics)
+
+## ⚔️ Battle System
+
+- **Basic Attacks**: Deal standard damage without riddles
+- **Special Attacks**: Answer riddles correctly to deal extra damage
+- **Monster Abilities**: Some monsters have unique abilities (attack first, double damage)
+- **Equipment Effects**: 
+  - **Flaming Sword**: Sets monsters on fire (2 damage before they attack)
+  - **Shields**: Chance to block attacks completely
+  - **Armor**: Reduces damage from monster attacks
+
+## 📚 Educational Content
+
+- **Math Riddles**: Addition, subtraction, multiplication across difficulty levels
+- **Forest Math**: 3-digit + 2-digit addition, equations with variables
+- **Spelling Challenges**: Greek words with common spelling mistakes
+- **German Math**: Addition and subtraction problems in German
+- **Geography Questions**: Capital cities, countries, and landmarks
+- **Map-specific content**: Each area has tailored educational challenges
 
 ## 🎲 Current Features
 
 ✅ **Implemented:**
 - Hero movement with arrow keys
-- Map generation with different terrain types
-- Collision detection for blocked areas
-- Monster placement on the map
-- Real-time health and position tracking
-- Responsive design for different screen sizes
+- Multiple maps with different themes and difficulty levels
+- Monster battles with turn-based combat
+- Educational riddle system with various subject categories
+- Equipment collection and effects (weapons, shields, armor, rings)
+- Special monster abilities and boss mechanics
+- Healing potions and item collection
+- Map transitions and special locations
+- Permanent HP bonuses for completing maps
 
 🚧 **Coming Soon:**
-- Battle system with educational riddles
-- Healing items and inventory system
+- Functional shop system in the Forest
+- More riddle categories and educational content
 - Sound effects and animations
 - Save/load game functionality
 
@@ -67,12 +98,13 @@ The game will automatically open in your browser at `http://localhost:4455`
 - **Styling**: CSS with modern design
 - **State Management**: React Context and useReducer
 - **Responsive**: Works on desktop and tablet
+- **Storage**: LocalStorage for permanent bonuses
 
 ## 🎨 Asset Credits
 
 - Map tiles from kenney_medieval-rts asset pack
-- Monster graphics from Malicious cute monster set
-- Game uses emoji for visual representation
+- Monster graphics from various free game asset collections
+- Item and equipment graphics from open source game assets
 
 ## 🔧 Development
 
@@ -91,10 +123,11 @@ For detailed game mechanics and design decisions, see the [Game Design Document]
 ## 🎓 Educational Goals
 
 This game is designed to:
-- Improve problem-solving skills through riddles
-- Enhance hand-eye coordination with movement controls
-- Teach basic geography and spatial awareness
-- Encourage exploration and curiosity
+- Improve problem-solving skills through diverse educational riddles
+- Enhance mathematical thinking with age-appropriate challenges
+- Develop language skills in both English and Greek
+- Introduce basic German vocabulary through math problems
+- Encourage exploration and strategic thinking
 - Provide a safe, fun learning environment
 
 ---
